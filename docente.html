@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Docente — Profesor Búho</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+:root{--naranja:#FF8C00;--naranja2:#FF6F00;--naranja-cl:#FFF3E0;--verde:#2E7D32;--verde-cl:#E8F5E9;--azul:#1565C0;--azul-cl:#E3F2FD;--morado:#6A1B9A;--morado-cl:#F3E5F5;--rojo:#C62828;--rojo-cl:#FFEBEE;--fondo:#F8F9FA;--texto:#212121;--texto2:#666;--radio:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:var(--fondo);color:var(--texto);min-height:100vh;}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);padding:20px;}
+.login-card{background:#fff;border-radius:24px;padding:34px 30px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
+.login-card .owl{font-size:3.5rem;display:block;margin-bottom:10px;}
+.login-card h1{font-family:'Fredoka One',cursive;font-size:1.7rem;color:var(--naranja);margin-bottom:4px;}
+.login-card p{font-size:.87rem;color:var(--texto2);margin-bottom:22px;}
+.login-campo{text-align:left;margin-bottom:12px;}
+.login-campo label{display:block;font-weight:800;font-size:.82rem;margin-bottom:4px;}
+.login-campo input,.login-campo select{width:100%;padding:11px 13px;border:2px solid #E0E0E0;border-radius:12px;font-size:.92rem;font-family:'Nunito',sans-serif;outline:none;transition:.2s;}
+.login-campo input:focus,.login-campo select:focus{border-color:var(--naranja);}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));color:#fff;border:none;border-radius:50px;font-family:'Fredoka One',cursive;font-size:1.15rem;cursor:pointer;margin-top:4px;}
+#panel{display:none;min-height:100vh;flex-direction:column;}
+.panel-header{background:linear-gradient(135deg,var(--naranja),var(--naranja2));color:#fff;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(255,140,0,.3);}
+.panel-header h1{font-family:'Fredoka One',cursive;font-size:1.35rem;}
+.header-info{font-size:.8rem;opacity:.85;}
+.btn-hdr{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 13px;border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;margin-left:5px;}
+.btn-hdr:hover{background:rgba(255,255,255,.35);}
+.panel-body{flex:1;padding:18px;max-width:1100px;margin:0 auto;width:100%;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+.stat-card{background:#fff;border-radius:var(--radio);padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.07);text-align:center;}
+.stat-num{font-family:'Fredoka One',cursive;font-size:2.1rem;display:block;}
+.stat-label{font-size:.74rem;color:var(--texto2);margin-top:2px;}
+.stat-card.verde .stat-num{color:var(--verde);}
+.stat-card.naranja .stat-num{color:var(--naranja);}
+.stat-card.azul .stat-num{color:var(--azul);}
+.stat-card.rojo .stat-num{color:var(--rojo);}
+.seccion{background:#fff;border-radius:var(--radio);padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.seccion-titulo{font-family:'Fredoka One',cursive;font-size:1.05rem;color:var(--naranja);margin-bottom:12px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-campo label{display:block;font-weight:800;font-size:.8rem;margin-bottom:4px;}
+.form-campo input,.form-campo select,.form-campo textarea{width:100%;padding:9px 11px;border:2px solid #E0E0E0;border-radius:10px;font-size:.86rem;font-family:'Nunito',sans-serif;outline:none;transition:.2s;}
+.form-campo input:focus,.form-campo select:focus{border-color:var(--naranja);}
+.form-campo.full{grid-column:1/-1;}
+.btn-crear{background:linear-gradient(135deg,var(--verde),#1B5E20);color:#fff;border:none;padding:10px 26px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;margin-top:8px;}
+.codigo-box{background:var(--naranja-cl);border:2px solid var(--naranja);border-radius:14px;padding:14px;text-align:center;margin-top:12px;display:none;}
+.codigo-grande{font-family:'Fredoka One',cursive;font-size:2.6rem;color:var(--naranja);letter-spacing:6px;}
+.tabla-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+thead th{background:#F8F9FA;padding:9px 12px;text-align:left;font-weight:800;color:var(--texto2);font-size:.74rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E0E0E0;}
+tbody tr{border-bottom:1px solid #F0F0F0;transition:.15s;}
+tbody tr:hover{background:#FAFAFA;}
+tbody td{padding:10px 12px;vertical-align:middle;}
+.badge-conectado{background:var(--verde-cl);color:var(--verde);padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:800;display:inline-flex;align-items:center;gap:4px;}
+.badge-desconectado{background:#F5F5F5;color:#999;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700;}
+.badge-activo::before{content:'';display:inline-block;width:6px;height:6px;background:var(--verde);border-radius:50%;animation:pulso 1.5s infinite;}
+@keyframes pulso{0%,100%{opacity:1}50%{opacity:.4}}
+.progreso-mini{height:5px;background:#E0E0E0;border-radius:3px;overflow:hidden;min-width:70px;}
+.progreso-fill{height:100%;background:linear-gradient(90deg,var(--naranja),var(--naranja2));border-radius:3px;}
+.avatar-letra{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--naranja),var(--naranja2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.88rem;flex-shrink:0;}
+.nombre-cell{display:flex;align-items:center;gap:8px;}
+.btn-accion{border:none;padding:4px 10px;border-radius:8px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.72rem;display:inline-flex;align-items:center;gap:3px;margin-right:3px;}
+.btn-ver{background:var(--azul-cl);color:var(--azul);}
+.btn-chat{background:var(--verde-cl);color:var(--verde);}
+.btn-desconectar{background:var(--rojo-cl);color:var(--rojo);}
+.btn-desconectar:disabled{background:#F5F5F5;color:#CCC;cursor:default;}
+.tiempo-alerta{color:var(--rojo);font-weight:800;}
+/* RÚBRICA EN PANEL */
+.rubrica-docente{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px;}
+.rd-item{background:#F8F9FA;border-radius:6px;padding:5px;text-align:center;}
+.rd-cat{font-size:.6rem;color:var(--texto2);}
+.rd-pts{font-weight:800;font-size:.85rem;}
+.rd-pts.bajo{color:var(--rojo);}
+.rd-pts.medio{color:var(--naranja);}
+.rd-pts.alto{color:var(--verde);}
+/* FILTROS */
+.filtros{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.filtro-select{padding:7px 11px;border:2px solid #E0E0E0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;}
+.btn-actualizar{background:var(--azul-cl);color:var(--azul);border:none;padding:7px 13px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;}
+/* CHAT PANEL */
+#panel-chat-doc{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:14px;}
+.chat-modal{background:#fff;border-radius:22px;width:100%;max-width:460px;height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.chat-hdr{background:linear-gradient(135deg,var(--verde),#1B5E20);color:#fff;padding:13px 16px;border-radius:22px 22px 0 0;display:flex;justify-content:space-between;align-items:center;}
+.chat-hdr h3{font-family:'Fredoka One',cursive;font-size:1rem;}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;background:#F8FAF8;display:flex;flex-direction:column;gap:8px;}
+.msg-doc{align-self:flex-end;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;padding:8px 12px;border-radius:14px 14px 3px 14px;max-width:82%;font-size:.82rem;line-height:1.4;}
+.msg-est{align-self:flex-start;background:#fff;border:1px solid #E0E0E0;padding:8px 12px;border-radius:14px 14px 14px 3px;max-width:82%;font-size:.82rem;line-height:1.4;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.msg-hora{font-size:.63rem;opacity:.7;margin-top:2px;}
+.chat-footer{padding:10px 12px;border-top:2px solid #F0F0F0;display:flex;gap:7px;align-items:center;}
+.chat-inp{flex:1;padding:9px 12px;border:2px solid #E0E0E0;border-radius:12px;font-size:.87rem;font-family:'Nunito',sans-serif;outline:none;resize:none;}
+.chat-inp:focus{border-color:var(--verde);}
+.btn-send{background:linear-gradient(135deg,var(--verde),#1B5E20);color:#fff;border:none;padding:9px 14px;border-radius:12px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;}
+/* DETALLE */
+#panel-detalle{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;padding:14px;}
+.detalle-modal{background:#fff;border-radius:22px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;}
+.detalle-header{background:linear-gradient(135deg,var(--azul),#0D47A1);color:#fff;padding:15px 18px;border-radius:22px 22px 0 0;display:flex;justify-content:space-between;align-items:center;}
+.detalle-header h3{font-family:'Fredoka One',cursive;font-size:1.1rem;}
+.detalle-body{padding:18px;}
+.det-stat{background:#F8F9FA;border-radius:10px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.det-stat-label{font-size:.8rem;color:var(--texto2);}
+.det-stat-val{font-weight:800;font-size:.92rem;}
+/* ANÁLISIS */
+.analisis-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.analisis-box{background:#F8F9FA;border-radius:12px;padding:14px;}
+.analisis-box h4{font-weight:800;color:var(--texto);margin-bottom:8px;font-size:.88rem;}
+.analisis-box div{font-size:.82rem;line-height:1.9;}
+.recom-box{background:var(--verde-cl);border-radius:12px;padding:14px;margin-bottom:12px;}
+.recom-box b{color:var(--verde);}
+.sin-trabajo-box{background:var(--rojo-cl);border-radius:12px;padding:12px;margin-bottom:10px;}
+.sin-actividad-box{background:var(--naranja-cl);border-radius:12px;padding:12px;margin-bottom:10px;}
+/* COMPETENCIAS */
+.competencias-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px;}
+.comp-card{background:#fff;border-radius:10px;padding:10px;text-align:center;border:2px solid #E0E0E0;}
+.comp-icono{font-size:1.3rem;display:block;margin-bottom:3px;}
+.comp-nombre{font-size:.68rem;color:var(--texto2);display:block;}
+.comp-pts{font-family:'Fredoka One',cursive;font-size:1.3rem;display:block;}
+.comp-barra{height:5px;background:#E0E0E0;border-radius:3px;overflow:hidden;margin-top:3px;}
+.comp-fill{height:100%;border-radius:3px;}
+/* CONFIRM */
+.overlay-confirm{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:center;justify-content:center;}
+.confirm-box{background:#fff;border-radius:20px;padding:26px 22px;max-width:350px;width:90%;text-align:center;}
+.confirm-box h3{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--rojo);margin-bottom:6px;}
+.confirm-box p{font-size:.88rem;color:var(--texto2);margin-bottom:18px;line-height:1.5;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+.btn-si{background:var(--rojo);color:#fff;border:none;padding:10px 26px;border-radius:50px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;}
+.btn-no{background:#F5F5F5;color:var(--texto);border:none;padding:10px 26px;border-radius:50px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;}
+.notif{display:none;position:fixed;top:16px;right:16px;background:var(--verde);color:#fff;padding:11px 18px;border-radius:12px;font-weight:700;z-index:500;box-shadow:0 4px 14px rgba(0,0,0,.2);font-size:.88rem;}
+.loader-row td{text-align:center;padding:26px;color:var(--texto2);font-size:.88rem;}
+.badge-msg-doc{background:var(--rojo);color:#fff;border-radius:50%;width:16px;height:16px;font-size:.65rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-left:3px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}.stats-grid{grid-template-columns:1fr 1fr;}.analisis-grid{grid-template-columns:1fr;}.rubrica-docente{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <span class="owl">🦉</span>
+    <h1>Panel Docente</h1>
+    <p>Accede para ver el progreso de tus estudiantes</p>
+    <div class="login-campo"><label>Tu nombre completo</label><input type="text" id="d-nombre" placeholder="Ej: Prof. María González" maxlength="50"></div>
+    <div class="login-campo"><label>Institución educativa</label><input type="text" id="d-institucion" placeholder="Ej: Escuela 24 de Mayo" maxlength="60"></div>
+    <div class="login-campo"><label>Curso / Año</label>
+      <select id="d-curso"><option value="">Selecciona el curso...</option><option>2° EGB</option><option>3° EGB</option><option>4° EGB</option><option>5° EGB</option><option>6° EGB</option><option>7° EGB</option><option>8° EGB</option><option>9° EGB</option><option>10° EGB</option></select>
+    </div>
+    <button class="btn-login" onclick="loginDocente()">Entrar al Panel 📊</button>
+    <p style="margin-top:12px;font-size:.73rem;color:#999">Datos guardados de forma segura. Solo tú ves tus estudiantes.</p>
+  </div>
+</div>
+
+<div id="panel">
+  <div class="panel-header">
+    <div><h1>📊 Panel Docente — Profesor Búho</h1><div class="header-info" id="hdr-info">Cargando...</div></div>
+    <div>
+      <button class="btn-hdr" onclick="exportarCSV()">📥 CSV</button>
+      <button class="btn-hdr" onclick="exportarPDF()">📄 Reporte PDF</button>
+      <button class="btn-hdr" onclick="cerrarSesionDocente()">Salir</button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card verde"><span class="stat-num" id="st-conectados">0</span><span class="stat-label">Conectados ahora</span></div>
+      <div class="stat-card naranja"><span class="stat-num" id="st-total">0</span><span class="stat-label">Total hoy</span></div>
+      <div class="stat-card azul"><span class="stat-num" id="st-textos">0</span><span class="stat-label">Textos revisados</span></div>
+      <div class="stat-card rojo"><span class="stat-num" id="st-tiempo">0m</span><span class="stat-label">Tiempo promedio</span></div>
+    </div>
+
+    <!-- COMPETENCIAS GRUPO -->
+    <div class="seccion" id="seccion-competencias" style="display:none">
+      <div class="seccion-titulo">📊 Competencias del grupo (promedio rúbrica)</div>
+      <div class="competencias-grid" id="competencias-grid"></div>
+    </div>
+
+    <!-- CREAR TAREA -->
+    <div class="seccion">
+      <div class="seccion-titulo">📋 Crear nueva tarea</div>
+      <div class="form-grid">
+        <div class="form-campo"><label>Título de la tarea</label><input type="text" id="t-titulo" placeholder="Ej: Redacción de cuento"></div>
+        <div class="form-campo"><label>Tipo de actividad</label><select id="t-tipo"><option value="revisar">Revisar texto</option><option value="tutor">Corregir oraciones</option><option value="cuentos">Crear un cuento</option><option value="libre">Libre</option></select></div>
+        <div class="form-campo full"><label>Instrucciones para el estudiante</label><textarea id="t-instrucciones" rows="2" placeholder="Ej: Escribe un cuento sobre un animal de Ecuador de al menos 5 oraciones y pídele al Profesor Búho que lo revise."></textarea></div>
+        <div class="form-campo"><label>Tiempo estimado (min)</label><input type="number" id="t-tiempo" value="20" min="5" max="90"></div>
+        <div class="form-campo"><label>N° esperado de estudiantes</label><input type="number" id="t-esperados" value="25" min="1" max="200"></div>
+      </div>
+      <button class="btn-crear" onclick="crearTarea()">✅ Crear tarea y generar código</button>
+      <div class="codigo-box" id="codigo-box">
+        <p style="font-size:.8rem;color:var(--texto2);margin-bottom:6px">Comparte este código con tus estudiantes:</p>
+        <div class="codigo-grande" id="codigo-generado">---</div>
+        <div style="font-size:.78rem;color:var(--texto2);margin-top:4px">Los estudiantes lo ingresan en el Profesor Búho</div>
+        <button onclick="copiarCodigo()" style="margin-top:10px;background:var(--naranja);color:#fff;border:none;padding:8px 18px;border-radius:20px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem">📋 Copiar código</button>
+      </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="seccion">
+      <div class="seccion-titulo">👨‍🎓 Mis estudiantes</div>
+      <div class="filtros">
+        <select class="filtro-select" id="filtro-tarea" onchange="filtrarTabla()"><option value="">Todas las tareas</option></select>
+        <select class="filtro-select" id="filtro-estado" onchange="filtrarTabla()"><option value="">Todos</option><option value="conectado">Conectados</option><option value="completado">Completaron</option></select>
+        <button class="btn-actualizar" onclick="cargarSesiones()">🔄 Actualizar</button>
+        <button class="btn-actualizar" style="background:var(--naranja-cl);color:var(--naranja)" onclick="exportarCSV()">📥 CSV</button>
+      </div>
+      <div class="tabla-wrap">
+        <table>
+          <thead><tr><th>Estudiante</th><th>Estado</th><th>Institución</th><th>Tarea</th><th>Tiempo</th><th>Textos</th><th>Rúbrica</th><th>Progreso</th><th>Acciones</th></tr></thead>
+          <tbody id="tabla-body"><tr class="loader-row"><td colspan="9">⏳ Cargando datos...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ANÁLISIS -->
+    <div class="seccion">
+      <div class="seccion-titulo">📈 Análisis cuantitativo y cualitativo</div>
+      <div id="analisis-contenido" style="color:var(--texto2);font-size:.88rem">Crea una tarea y espera que los estudiantes se conecten.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DETALLE -->
+<div id="panel-detalle" onclick="cerrarDetalle(event)">
+  <div class="detalle-modal">
+    <div class="detalle-header"><h3 id="det-nombre">Estudiante</h3><button onclick="cerrarDetalle()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">✖</button></div>
+    <div class="detalle-body" id="det-body"></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="panel-chat-doc">
+  <div class="chat-modal">
+    <div class="chat-hdr"><h3>💬 <span id="chat-nombre-hdr">Estudiante</span> <span id="chat-estado-hdr" style="font-size:.72rem;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px">🟢</span></h3><button onclick="cerrarChatDoc()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">✖</button></div>
+    <div class="chat-msgs" id="chat-doc-msgs"></div>
+    <div class="chat-footer"><textarea class="chat-inp" id="chat-doc-inp" placeholder="Escribe un mensaje al estudiante..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMsgDoc();}"></textarea><button class="btn-send" onclick="enviarMsgDoc()">Enviar ➤</button></div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="overlay-confirm" id="confirm-desc"><div class="confirm-box"><h3>⚠️ Desconectar estudiante</h3><p id="confirm-msg"></p><div class="confirm-btns"><button class="btn-si" onclick="confirmarDesconexion()">Sí, desconectar</button><button class="btn-no" onclick="cerrarConfirm()">Cancelar</button></div></div></div>
+
+<div class="notif" id="notif"></div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,onSnapshot,query,where,orderBy,serverTimestamp,arrayUnion}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FB_CFG={apiKey:"AIzaSyAvsGXkR6ybJgpMcToEYyR0uOuLtxTbR6M",authDomain:"profesor-buho.firebaseapp.com",projectId:"profesor-buho",storageBucket:"profesor-buho.firebasestorage.app",messagingSenderId:"137425768037",appId:"1:137425768037:web:22ed4d8b4bb4b95d5b008c"};
+const app=initializeApp(FB_CFG);const db=getFirestore(app);
+
+let docenteId='',docenteNombre='',docenteCurso='',docenteInstitucion='';
+let tareaActiva=null,todasSesiones=[],unsubscribe=null;
+let sesionParaDesc=null,chatSesionActual=null;
+let mensajesChat={};
+let unsubChats={};
+
+window.loginDocente=function(){
+  const nombre=document.getElementById('d-nombre').value.trim();
+  const inst=document.getElementById('d-institucion').value.trim();
+  const curso=document.getElementById('d-curso').value;
+  if(!nombre||!curso){mostrarNotif('Completa todos los campos');return;}
+  docenteNombre=nombre;docenteCurso=curso;docenteInstitucion=inst;
+  docenteId='doc_'+nombre.replace(/\s/g,'_').toLowerCase()+'_'+curso.replace(/[°\s]/g,'');
+  document.getElementById('login-screen').style.display='none';
+  const p=document.getElementById('panel');p.style.display='flex';p.style.flexDirection='column';
+  document.getElementById('hdr-info').textContent=nombre+' · '+curso+(inst?' · '+inst:'');
+  cargarSesiones();cargarTareas();escucharTiempoReal();
+};
+
+window.crearTarea=async function(){
+  const titulo=document.getElementById('t-titulo').value.trim();
+  if(!titulo){mostrarNotif('Escribe el título de la tarea');return;}
+  const cod=generarCodigo();
+  try{
+    const ref=await addDoc(collection(db,'tareas'),{codigo:cod,titulo,tipo:document.getElementById('t-tipo').value,instrucciones:document.getElementById('t-instrucciones').value.trim(),tiempo:parseInt(document.getElementById('t-tiempo').value)||20,esperados:parseInt(document.getElementById('t-esperados').value)||25,docenteId,docenteNombre,docenteCurso,docenteInstitucion,fecha:serverTimestamp(),activa:true});
+    tareaActiva={id:ref.id,codigo:cod,titulo,esperados:parseInt(document.getElementById('t-esperados').value)||25};
+    document.getElementById('codigo-generado').textContent=cod;
+    document.getElementById('codigo-box').style.display='block';
+    actualizarSelectTareas(cod,titulo);
+    mostrarNotif('¡Tarea creada! Código: '+cod);
+  }catch(e){mostrarNotif('Error: '+e.message);}
+};
+function generarCodigo(){const l='ABCDEFGHJKLMNPQRSTUVWXYZ',n='23456789';return l[Math.floor(Math.random()*l.length)]+l[Math.floor(Math.random()*l.length)]+n[Math.floor(Math.random()*n.length)]+n[Math.floor(Math.random()*n.length)];}
+window.copiarCodigo=function(){navigator.clipboard.writeText(document.getElementById('codigo-generado').textContent).then(()=>mostrarNotif('¡Código copiado!'));};
+
+window.cargarSesiones=async function(){
+  try{
+    const q=query(collection(db,'sesiones'),where('docenteId','==',docenteId),orderBy('inicio','desc'));
+    const snap=await getDocs(q);
+    todasSesiones=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderizarTabla(todasSesiones);actualizarStats(todasSesiones);actualizarAnalisis(todasSesiones);actualizarCompetencias(todasSesiones);
+  }catch(e){document.getElementById('tabla-body').innerHTML='<tr class="loader-row"><td colspan="9">Error: '+e.message+'</td></tr>';}
+};
+
+function escucharTiempoReal(){
+  if(unsubscribe)unsubscribe();
+  const q=query(collection(db,'sesiones'),where('docenteId','==',docenteId),orderBy('inicio','desc'));
+  unsubscribe=onSnapshot(q,snap=>{
+    todasSesiones=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderizarTabla(todasSesiones);actualizarStats(todasSesiones);actualizarAnalisis(todasSesiones);actualizarCompetencias(todasSesiones);
+    // Escuchar mensajes de conectados
+    todasSesiones.filter(s=>s.activo).forEach(s=>escucharMsgsEst(s.id,s.nombreEstudiante));
+  });
+}
+
+async function cargarTareas(){const q=query(collection(db,'tareas'),where('docenteId','==',docenteId));const snap=await getDocs(q);snap.docs.forEach(d=>actualizarSelectTareas(d.data().codigo,d.data().titulo));}
+function actualizarSelectTareas(cod,tit){const sel=document.getElementById('filtro-tarea');if(!Array.from(sel.options).some(o=>o.value===cod)){const opt=document.createElement('option');opt.value=cod;opt.textContent=cod+' — '+tit;sel.appendChild(opt);}}
+
+function calcDur(s){if(s.duracionMinutos>0)return s.duracionMinutos;if(s.activo&&s.inicio)return Math.floor((Date.now()-s.inicio.seconds*1000)/60000);return 0;}
+
+// ══ RÚBRICA EN TABLA ══
+function renderRubricaMini(rubrica){
+  if(!rubrica||Object.keys(rubrica).length===0)return '<span style="color:#999;font-size:.7rem">Sin datos</span>';
+  const CORTOS={ortografia:'Ortog.',coherencia:'Coher.',cohesion:'Cohes.',vocabulario:'Vocab.',puntuacion:'Puntua.',creatividad:'Creat.',sintaxis:'Sintax.',registro:'Regist.',argumentacion:'Argum.',presentacion:'Present.'};
+  const items=Object.entries(rubrica).slice(0,4).map(([k,v])=>{const c=v<=2?'bajo':v<=3?'medio':'alto';return`<div class="rd-item"><div class="rd-cat">${CORTOS[k]||k}</div><div class="rd-pts ${c}">${v}/5</div></div>`;}).join('');
+  return`<div class="rubrica-docente">${items}</div>`;
+}
+
+function renderizarTabla(ses){
+  const ft=document.getElementById('filtro-tarea').value;
+  const fe=document.getElementById('filtro-estado').value;
+  let lista=ses;
+  if(ft)lista=lista.filter(s=>s.tareaId===ft);
+  if(fe==='conectado')lista=lista.filter(s=>s.activo);
+  if(fe==='completado')lista=lista.filter(s=>!s.activo&&(s.textosRevisados||0)>0);
+  if(lista.length===0){document.getElementById('tabla-body').innerHTML='<tr class="loader-row"><td colspan="9">No hay estudiantes aún.</td></tr>';return;}
+  const html=lista.map(s=>{
+    const dur=calcDur(s);
+    const prog=Math.min(100,Math.round(((s.textosRevisados||0)+(s.erroresCorregidos||0)+(s.cuentosCreados||0))/3*33));
+    const ini=s.inicio?new Date(s.inicio.seconds*1000).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'}):'--';
+    const letra=(s.nombreEstudiante||'?')[0].toUpperCase();
+    const tAlerta=dur>90?' tiempo-alerta':'';
+    const msgsEst=(s.msgsEstudiante||[]).length;
+    const msgsVisto=(mensajesChat[s.id+'_visto'])||0;
+    const noLeidos=msgsEst-msgsVisto;
+    const badgeMsg=noLeidos>0?`<span class="badge-msg-doc">${noLeidos}</span>`:'';
+    const rubrica=s.ultimaRubrica||{};
+    return`<tr>
+      <td><div class="nombre-cell"><div class="avatar-letra">${letra}</div><div><div style="font-weight:800">${s.nombreEstudiante||'Desconocido'}</div><div style="font-size:.68rem;color:var(--texto2)">${ini} ${s.paralelo?'· '+s.paralelo:''}</div></div></div></td>
+      <td>${s.activo?'<span class="badge-conectado"><span class="badge-activo"></span>Conectado</span>':'<span class="badge-desconectado">Desconectado</span>'}</td>
+      <td style="font-size:.75rem;color:var(--texto2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.institucion||'—'}</td>
+      <td style="font-size:.78rem">${s.tareaId||'Libre'}</td>
+      <td style="font-weight:700" class="${tAlerta}">${dur}m${dur>90?' ⚠️':''}</td>
+      <td style="text-align:center;font-weight:800;color:var(--verde)">${s.textosRevisados||0}</td>
+      <td>${renderRubricaMini(rubrica)}</td>
+      <td><div class="progreso-mini"><div class="progreso-fill" style="width:${prog}%"></div></div></td>
+      <td style="white-space:nowrap">
+        <button class="btn-accion btn-ver" onclick="verDetalle('${s.id}')">👁 Ver</button>
+        <button class="btn-accion btn-chat" onclick="abrirChatDoc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${s.activo})">💬${badgeMsg}</button>
+        <button class="btn-accion btn-desconectar" onclick="pedirDesc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${dur})" ${!s.activo?'disabled':''}>⏹</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tabla-body').innerHTML=html;
+}
+
+function actualizarStats(ses){
+  const hoy=new Date().toDateString();
+  const hoyS=ses.filter(s=>s.inicio&&new Date(s.inicio.seconds*1000).toDateString()===hoy);
+  const con=ses.filter(s=>s.activo).length;
+  const totalTx=ses.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  const tms=ses.map(s=>calcDur(s)).filter(t=>t>0);
+  const prom=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  document.getElementById('st-conectados').textContent=con;
+  document.getElementById('st-total').textContent=hoyS.length;
+  document.getElementById('st-textos').textContent=totalTx;
+  document.getElementById('st-tiempo').textContent=prom+'m';
+}
+
+// ══ COMPETENCIAS DEL GRUPO ══
+function actualizarCompetencias(ses){
+  const seccion=document.getElementById('seccion-competencias');
+  const conRubrica=ses.filter(s=>s.ultimaRubrica&&Object.keys(s.ultimaRubrica).length>0);
+  if(conRubrica.length===0){seccion.style.display='none';return;}
+  seccion.style.display='block';
+  // Acumular por criterio
+  const acum={};let total=0;
+  conRubrica.forEach(s=>{total++;Object.entries(s.ultimaRubrica||{}).forEach(([k,v])=>{if(!acum[k]){acum[k]={suma:0,cnt:0};}acum[k].suma+=v;acum[k].cnt++;});});
+  const NOMBRES={ortografia:'Ortografía 📝',coherencia:'Coherencia 🔗',cohesion:'Cohesión ✂️',vocabulario:'Vocabulario 📚',puntuacion:'Puntuación .',creatividad:'Creatividad 🎨',sintaxis:'Sintaxis 🔤',registro:'Registro 📋',argumentacion:'Argumentación 💡'};
+  const grid=document.getElementById('competencias-grid');
+  grid.innerHTML=Object.entries(acum).map(([k,v])=>{
+    const prom=(v.suma/v.cnt).toFixed(1);
+    const pct=Math.round((parseFloat(prom)/5)*100);
+    const color=pct<50?'#C62828':pct<70?'#FF8C00':'#2E7D32';
+    return`<div class="comp-card"><span class="comp-nombre">${NOMBRES[k]||k}</span><span class="comp-pts" style="color:${color}">${prom}/5</span><div class="comp-barra"><div class="comp-fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+  }).join('');
+}
+
+// ══ ANÁLISIS MEJORADO ══
+function actualizarAnalisis(ses){
+  if(ses.length===0)return;
+  const total=ses.length;
+  const activos=ses.filter(s=>s.activo).length;
+  const completaron=ses.filter(s=>(s.textosRevisados||0)+(s.erroresCorregidos||0)+(s.cuentosCreados||0)>0);
+  const noTrabajaron=ses.filter(s=>(s.textosRevisados||0)+(s.erroresCorregidos||0)+(s.cuentosCreados||0)===0);
+  const sinActividad=ses.filter(s=>calcDur(s)>30&&(s.textosRevisados||0)===0&&(s.erroresCorregidos||0)===0);
+  const totalTx=ses.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  const totalErr=ses.reduce((a,s)=>a+(s.erroresCorregidos||0),0);
+  const totalCt=ses.reduce((a,s)=>a+(s.cuentosCreados||0),0);
+  const tms=ses.map(s=>calcDur(s)).filter(t=>t>0);
+  const promT=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  const maxT=tms.length?Math.max(...tms):0;
+  const minT=tms.length?Math.min(...tms):0;
+  const pctComp=total>0?Math.round((completaron.length/total)*100):0;
+  const pctPart=tareaActiva?Math.round((total/tareaActiva.esperados)*100):100;
+  let nivelEng='Bajo',colorEng='#C62828';
+  if(pctComp>=80){nivelEng='Excelente';colorEng='#2E7D32';}else if(pctComp>=60){nivelEng='Bueno';colorEng='#1565C0';}else if(pctComp>=40){nivelEng='Regular';colorEng='#FF8C00';}
+  // Errores más frecuentes del grupo
+  const NOMBRES_CAT={ortografia:'Ortografía',coherencia:'Coherencia',cohesion:'Cohesión',vocabulario:'Vocabulario',puntuacion:'Puntuación',creatividad:'Creatividad',sintaxis:'Sintaxis'};
+  const acumErr={};
+  ses.forEach(s=>{if(s.ultimaRubrica)Object.entries(s.ultimaRubrica).forEach(([k,v])=>{if(v<=2){if(!acumErr[k])acumErr[k]=0;acumErr[k]++;}});});
+  const topErr=Object.entries(acumErr).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  let htmlErr='';
+  if(topErr.length>0){htmlErr='<div style="background:var(--rojo-cl);border-radius:10px;padding:10px;margin-top:8px"><b style="color:var(--rojo);font-size:.8rem">⚠️ Errores más frecuentes del grupo:</b><br>'+topErr.map(([k,n])=>`<span style="font-size:.78rem;display:inline-block;margin-top:4px;margin-right:8px;background:#fff;padding:2px 8px;border-radius:20px;border:1px solid var(--rojo-cl)">${NOMBRES_CAT[k]||k}: ${n} estudiantes</span>`).join('')+'</div>';}
+  // HTML Estudiantes sin trabajar
+  let htmlNoTrab='';
+  if(noTrabajaron.length>0){htmlNoTrab=`<div class="sin-trabajo-box"><b style="color:var(--rojo);font-size:.82rem">❌ Sin ninguna actividad (${noTrabajaron.length} estudiantes):</b><br>${noTrabajaron.map(s=>'<span style="font-size:.78rem;background:#fff;padding:1px 6px;border-radius:20px;margin:2px 3px;display:inline-block">'+s.nombreEstudiante+'</span>').join('')}</div>`;}
+  let htmlSinAct='';
+  if(sinActividad.length>0){htmlSinAct=`<div class="sin-actividad-box"><b style="color:var(--naranja);font-size:.82rem">⏳ Conectados +30min sin actividad:</b><br>${sinActividad.map(s=>'<span style="font-size:.78rem;background:#fff;padding:1px 6px;border-radius:20px;margin:2px 3px;display:inline-block">'+s.nombreEstudiante+' ('+calcDur(s)+'min)</span>').join('')}</div>`;}
+  document.getElementById('analisis-contenido').innerHTML=`
+    <div class="analisis-grid">
+      <div class="analisis-box"><h4>📊 Datos cuantitativos</h4><div>
+        <b>Participación:</b> ${total}${tareaActiva?' de '+tareaActiva.esperados:''} estudiantes (${pctPart}%)<br>
+        <b>Conectados ahora:</b> ${activos}<br>
+        <b>Completaron actividad:</b> ${completaron.length} (${pctComp}%)<br>
+        <b>Total textos revisados:</b> ${totalTx}<br>
+        <b>Total errores corregidos:</b> ${totalErr}<br>
+        <b>Cuentos creados:</b> ${totalCt}<br>
+        <b>Tiempo promedio:</b> ${promT} min<br>
+        <b>Tiempo mínimo:</b> ${minT} min<br>
+        <b>Tiempo máximo:</b> ${maxT} min
+      </div></div>
+      <div class="analisis-box"><h4>🔍 Análisis cualitativo</h4><div>
+        <b>Nivel de participación:</b> <span style="font-weight:800;color:${colorEng}">${nivelEng}</span><br>
+        <b>Promedio textos/estudiante:</b> ${total>0?(totalTx/total).toFixed(1):0}<br>
+        <b>Promedio errores/estudiante:</b> ${total>0?(totalErr/total).toFixed(1):0}<br>
+        ${pctComp>=80?'✅ La mayoría completó la actividad satisfactoriamente.':pctComp>=60?'⚠️ Más de la mitad completó. Algunos necesitan apoyo.':'❌ Baja participación. Revisar instrucciones.'}<br>
+        ${promT>=15?'✅ Los estudiantes dedicaron tiempo suficiente.':promT>=8?'⚠️ Tiempo corto. Verificar dificultad.':'❌ Tiempo muy corto. Verificar comprensión.'}
+        ${htmlErr}
+      </div></div>
+    </div>
+    ${htmlNoTrab}${htmlSinAct}
+    <div class="recom-box">
+      <b>💡 Recomendación pedagógica:</b><br>
+      <div style="font-size:.84rem;margin-top:6px;line-height:1.6">${generarRecomendacion(pctComp,promT,total,totalErr,noTrabajaron,topErr)}</div>
+    </div>`;
+}
+
+function generarRecomendacion(pctComp,promT,total,errores,noTrab,topErr){
+  if(total===0)return'Espera que los estudiantes se conecten.';
+  let rec='';
+  if(noTrab.length===0&&pctComp>=80&&promT>=15)rec='🏆 Excelente sesión. Todo el grupo participó activamente. Puedes avanzar con contenido nuevo.';
+  else if(pctComp>=60)rec=`La mayoría participó bien.`;
+  else if(promT<10)rec=`El tiempo promedio fue muy corto (${promT} min). En la próxima sesión divide la actividad en partes más pequeñas.`;
+  else rec='Continúa monitoreando. Asegúrate de que todos reciban retroalimentación.';
+  if(topErr.length>0){const NOMBRES={ortografia:'ortografía',coherencia:'coherencia textual',cohesion:'cohesión',vocabulario:'vocabulario',puntuacion:'puntuación'};rec+=` Se recomienda reforzar <b>${NOMBRES[topErr[0][0]]||topErr[0][0]}</b> en la próxima clase ya que es el error más frecuente del grupo.`;}
+  return rec;
+}
+
+// ══ DETALLE ══
+window.verDetalle=function(id){
+  const s=todasSesiones.find(x=>x.id===id);if(!s)return;
+  const dur=calcDur(s);
+  const ini=s.inicio?new Date(s.inicio.seconds*1000).toLocaleString('es-EC'):'Desconocido';
+  const fin=s.fin?new Date(s.fin.seconds*1000).toLocaleString('es-EC'):(s.activo?'En curso':'—');
+  const NOMBRES_CAT={ortografia:'Ortografía',coherencia:'Coherencia',cohesion:'Cohesión',vocabulario:'Vocabulario',puntuacion:'Puntuación',creatividad:'Creatividad',sintaxis:'Sintaxis'};
+  const ETIQ={1:'⚠️ A mejorar',2:'📈 Regular',3:'✅ Bien',4:'⭐ Muy bien',5:'🏆 Excelente'};
+  const COLORES={1:'#C62828',2:'#E65100',3:'#F9A825',4:'#1565C0',5:'#2E7D32'};
+  let htmlRubrica='';
+  if(s.ultimaRubrica&&Object.keys(s.ultimaRubrica).length>0){
+    htmlRubrica='<div style="background:var(--morado-cl);border-radius:12px;padding:12px;margin-top:10px"><b style="color:var(--morado);font-size:.8rem">📊 Última rúbrica del estudiante:</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">'+Object.entries(s.ultimaRubrica).map(([k,v])=>`<div style="background:#fff;border-radius:8px;padding:8px;text-align:center"><div style="font-size:.65rem;color:var(--texto2)">${NOMBRES_CAT[k]||k}</div><div style="font-weight:800;color:${COLORES[v]};font-size:1.1rem">${v}/5</div><div style="font-size:.62rem;color:${COLORES[v]}">${ETIQ[v]||''}</div></div>`).join('')+'</div></div>';
+  }
+  document.getElementById('det-nombre').textContent=s.nombreEstudiante||'Estudiante';
+  document.getElementById('det-body').innerHTML=`
+    <div class="det-stat"><span class="det-stat-label">Estado</span><span class="det-stat-val">${s.activo?'🟢 Conectado':'⚫ Desconectado'}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Nivel</span><span class="det-stat-val">${s.nivel||'—'}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Institución</span><span class="det-stat-val">${s.institucion||'—'}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Paralelo</span><span class="det-stat-val">${s.paralelo||'—'}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Tarea</span><span class="det-stat-val">${s.tareaId||'Libre'}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Entró</span><span class="det-stat-val">${ini}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Salió</span><span class="det-stat-val">${fin}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Tiempo activo</span><span class="det-stat-val ${dur>90?'tiempo-alerta':''}">${dur} min${dur>90?' ⚠️':''}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Textos revisados</span><span class="det-stat-val" style="color:var(--verde)">${s.textosRevisados||0}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Errores corregidos</span><span class="det-stat-val" style="color:var(--azul)">${s.erroresCorregidos||0}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Cuentos creados</span><span class="det-stat-val" style="color:var(--naranja)">${s.cuentosCreados||0}</span></div>
+    ${htmlRubrica}
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn-accion btn-chat" style="padding:8px 14px;font-size:.82rem" onclick="cerrarDetalle();abrirChatDoc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${s.activo})">💬 Enviar mensaje</button>
+      ${s.activo?`<button class="btn-accion btn-desconectar" style="padding:8px 14px;font-size:.82rem" onclick="cerrarDetalle();pedirDesc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${dur})">⏹ Desconectar</button>`:''}
+    </div>`;
+  document.getElementById('panel-detalle').style.display='flex';
+};
+window.cerrarDetalle=function(e){if(!e||e.target.id==='panel-detalle')document.getElementById('panel-detalle').style.display='none';};
+
+// ══ CHAT ══
+window.abrirChatDoc=function(sesId,nombre,conectado){
+  chatSesionActual=sesId;
+  document.getElementById('chat-nombre-hdr').textContent=nombre;
+  document.getElementById('chat-estado-hdr').textContent=conectado?'🟢 Conectado':'⚫ Desconectado';
+  mensajesChat[sesId+'_visto']=(mensajesChat[sesId+'_msgsEst']||0);
+  renderizarChatDoc(sesId);
+  escucharMsgsEst(sesId,nombre);
+  document.getElementById('panel-chat-doc').style.display='flex';
+  document.getElementById('chat-doc-inp').focus();
+};
+window.cerrarChatDoc=function(){document.getElementById('panel-chat-doc').style.display='none';chatSesionActual=null;};
+
+window.enviarMsgDoc=async function(){
+  const inp=document.getElementById('chat-doc-inp');
+  const texto=inp.value.trim();
+  if(!texto||!chatSesionActual)return;
+  const hora=new Date().toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'});
+  if(!mensajesChat[chatSesionActual])mensajesChat[chatSesionActual]=[];
+  mensajesChat[chatSesionActual].push({role:'docente',texto,hora,ts:Date.now()});
+  inp.value='';
+  // Guardar en Firestore usando arrayUnion en sesión
+  try{await updateDoc(doc(db,'sesiones',chatSesionActual),{msgsDocente:arrayUnion({texto,hora,ts:Date.now()})});}catch(e){console.log('Error msg:',e);}
+  renderizarChatDoc(chatSesionActual);
+};
+
+function escucharMsgsEst(sesId,nombre){
+  if(unsubChats[sesId])return;
+  unsubChats[sesId]=onSnapshot(doc(db,'sesiones',sesId),snap=>{
+    const d=snap.data();if(!d)return;
+    const msgsDoc=(d.msgsDocente||[]).map(m=>({...m,role:'docente'}));
+    const msgsEst=(d.msgsEstudiante||[]).map(m=>({...m,role:'estudiante'}));
+    const todos=[...msgsDoc,...msgsEst].sort((a,b)=>(a.ts||0)-(b.ts||0));
+    mensajesChat[sesId]=todos;
+    const newEstCount=(d.msgsEstudiante||[]).length;
+    if(newEstCount>(mensajesChat[sesId+'_msgsEst']||0)){
+      if(chatSesionActual!==sesId)mostrarNotif('💬 Mensaje de '+nombre);
+    }
+    mensajesChat[sesId+'_msgsEst']=newEstCount;
+    if(chatSesionActual===sesId)renderizarChatDoc(sesId);
+    renderizarTabla(todasSesiones);
+  });
+}
+
+function renderizarChatDoc(sesId){
+  const msgs=mensajesChat[sesId]||[];
+  const cont=document.getElementById('chat-doc-msgs');
+  if(msgs.length===0){cont.innerHTML='<div style="text-align:center;color:#999;font-size:.82rem;padding:20px">No hay mensajes aún.</div>';return;}
+  cont.innerHTML=msgs.map(m=>{const esDoc=m.role==='docente';return`<div class="msg-${esDoc?'doc':'est'}"><div style="font-size:.65rem;opacity:.75;margin-bottom:2px">${esDoc?'Prof. 🦉':'Estudiante 👦'}</div>${m.texto}<div class="msg-hora">${m.hora||''}</div></div>`;}).join('');
+  cont.scrollTop=cont.scrollHeight;
+}
+
+// ══ DESCONEXIÓN ══
+window.pedirDesc=function(id,nombre,dur){
+  sesionParaDesc=id;
+  document.getElementById('confirm-msg').innerHTML=`¿Desconectar a <b>${nombre}</b>?<br><span style="font-size:.83rem;color:var(--texto2)">Lleva <b>${dur} minutos</b> conectado. El estudiante verá una cuenta regresiva de 10 segundos.</span>`;
+  document.getElementById('confirm-desc').style.display='flex';
+};
+window.confirmarDesconexion=async function(){
+  if(!sesionParaDesc)return;
+  try{await updateDoc(doc(db,'sesiones',sesionParaDesc),{activo:false,fin:serverTimestamp(),desconectadoPorDocente:true});}catch(e){mostrarNotif('Error: '+e.message);}
+  cerrarConfirm();mostrarNotif('✅ Estudiante desconectado');
+};
+window.cerrarConfirm=function(){document.getElementById('confirm-desc').style.display='none';sesionParaDesc=null;};
+
+// ══ FILTROS ══
+window.filtrarTabla=function(){renderizarTabla(todasSesiones);};
+
+// ══ EXPORTAR CSV ══
+window.exportarCSV=function(){
+  if(todasSesiones.length===0){mostrarNotif('No hay datos');return;}
+  const enc=['Nombre','Estado','Institución','Paralelo','Nivel','Tarea','Entrada','Salida','Minutos','Textos','Errores','Cuentos','Ortog.','Coher.','Cohes.'];
+  const filas=todasSesiones.map(s=>{
+    const ini=s.inicio?new Date(s.inicio.seconds*1000).toLocaleString('es-EC'):'';
+    const fin=s.fin?new Date(s.fin.seconds*1000).toLocaleString('es-EC'):'';
+    const r=s.ultimaRubrica||{};
+    return[s.nombreEstudiante||'',s.activo?'Conectado':'Desconectado',s.institucion||'',s.paralelo||'',s.nivel||'',s.tareaId||'Libre',ini,fin,calcDur(s),s.textosRevisados||0,s.erroresCorregidos||0,s.cuentosCreados||0,r.ortografia||'',r.coherencia||'',r.cohesion||''];
+  });
+  const csv=[enc,...filas].map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='reporte_'+new Date().toLocaleDateString('es-EC').replace(/\//g,'-')+'.csv';a.click();
+  mostrarNotif('CSV exportado con rúbrica por criterios');
+};
+
+// ══ REPORTE PDF (texto imprimible) ══
+window.exportarPDF=function(){
+  if(todasSesiones.length===0){mostrarNotif('No hay datos');return;}
+  const hoy=new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'});
+  const completaron=todasSesiones.filter(s=>(s.textosRevisados||0)>0).length;
+  const pctComp=todasSesiones.length>0?Math.round((completaron/todasSesiones.length)*100):0;
+  const totalTx=todasSesiones.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  const tms=todasSesiones.map(s=>calcDur(s)).filter(t=>t>0);
+  const promT=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  const noTrab=todasSesiones.filter(s=>(s.textosRevisados||0)===(0));
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte Profesor Búho</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#333;max-width:800px;margin:0 auto;}h1{color:#FF8C00;font-size:22px;}h2{color:#1565C0;font-size:16px;border-bottom:2px solid #E0E0E0;padding-bottom:6px;margin-top:20px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}th{background:#F8F9FA;padding:8px;text-align:left;border:1px solid #E0E0E0;font-weight:bold;}td{padding:7px 8px;border:1px solid #E0E0E0;}tr:nth-child(even){background:#FAFAFA;}.stat{display:inline-block;margin:8px 12px;text-align:center;}.stat-num{font-size:28px;font-weight:bold;color:#FF8C00;display:block;}.stat-label{font-size:11px;color:#666;}.alerta{color:#C62828;font-weight:bold;}@media print{button{display:none;}}</style></head><body>
+    <h1>🦉 Reporte — Profesor Búho</h1>
+    <p><b>Docente:</b> ${docenteNombre} &nbsp;|&nbsp; <b>Institución:</b> ${docenteInstitucion} &nbsp;|&nbsp; <b>Curso:</b> ${docenteCurso}</p>
+    <p><b>Fecha:</b> ${hoy}</p>
+    <h2>Resumen general</h2>
+    <div><span class="stat"><span class="stat-num">${todasSesiones.length}</span><span class="stat-label">Estudiantes</span></span><span class="stat"><span class="stat-num">${completaron}</span><span class="stat-label">Completaron</span></span><span class="stat"><span class="stat-num">${pctComp}%</span><span class="stat-label">Participación</span></span><span class="stat"><span class="stat-num">${totalTx}</span><span class="stat-label">Textos revisados</span></span><span class="stat"><span class="stat-num">${promT}min</span><span class="stat-label">Tiempo promedio</span></span></div>
+    <h2>Detalle por estudiante</h2>
+    <table><thead><tr><th>Nombre</th><th>Estado</th><th>Tiempo</th><th>Textos</th><th>Errores</th><th>Ortog.</th><th>Coher.</th><th>Cohes.</th></tr></thead><tbody>
+    ${todasSesiones.map(s=>{const r=s.ultimaRubrica||{};const dur=calcDur(s);const al=dur>90?'class="alerta"':'';return`<tr><td ${al}>${s.nombreEstudiante||'?'}</td><td>${s.activo?'🟢 Conectado':'⚫ Desc.'}</td><td ${al}>${dur}min${dur>90?' ⚠️':''}</td><td>${s.textosRevisados||0}</td><td>${s.erroresCorregidos||0}</td><td>${r.ortografia?r.ortografia+'/5':'—'}</td><td>${r.coherencia?r.coherencia+'/5':'—'}</td><td>${r.cohesion?r.cohesion+'/5':'—'}</td></tr>`;}).join('')}
+    </tbody></table>
+    ${noTrab.length>0?`<h2 style="color:var(--rojo)">Estudiantes sin actividad</h2><p class="alerta">${noTrab.map(s=>s.nombreEstudiante).join(', ')}</p>`:''}
+    <h2>Recomendación</h2><p>${pctComp>=80?'Excelente sesión. El grupo trabajó activamente.':pctComp>=60?'Mayoría participó. Algunos necesitan apoyo individualizado.':'Baja participación. Revisar instrucciones y dificultad de la tarea.'}</p>
+    <br><button onclick="window.print()" style="background:#FF8C00;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Imprimir / Guardar PDF</button>
+    </body></html>`);
+  win.document.close();
+};
+
+window.cerrarSesionDocente=function(){if(unsubscribe)unsubscribe();Object.values(unsubChats).forEach(u=>u());document.getElementById('panel').style.display='none';document.getElementById('login-screen').style.display='flex';};
+function mostrarNotif(msg){const n=document.getElementById('notif');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',3000);}
+</script>
+</body>
+</html>
