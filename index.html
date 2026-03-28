@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -240,6 +239,9 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(160deg,#FFF8EE 0
 #chat-doc-input:focus{border-color:var(--verde);}
 .btn-chat-doc-send{background:var(--verde);color:#fff;border:none;padding:7px 12px;border-radius:10px;cursor:pointer;font-weight:800;font-size:.8rem;font-family:'Nunito',sans-serif;}
 body.fuente-grande{font-size:19px;}
+.perfil-card{background:#fff;border:2px solid #E0E0E0;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s;}
+.perfil-card:hover{border-color:var(--naranja);background:var(--naranja-cl);}
+.perfil-card.sel{background:var(--naranja);color:#fff;border-color:var(--naranja);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:480px){.niveles-grid{gap:8px;}.campo-grupo{grid-template-columns:1fr;}.correc-grid{grid-template-columns:1fr;}.rubrica-grid{grid-template-columns:1fr 1fr;}.juegos-grid{grid-template-columns:1fr 1fr;}}
@@ -271,6 +273,24 @@ body.fuente-grande{font-size:19px;}
         <input type="text" id="input-paralelo" placeholder="Ej: 6to B" maxlength="20">
       </div>
     </div>
+    <!-- SELECTOR DE REGIÓN — LOEI Art. 2z Interculturalidad -->
+    <div style="margin-top:10px">
+      <label style="font-size:.8rem;margin-bottom:6px;display:block;font-weight:800">🗺️ ¿De qué región eres? (para personalizar tu experiencia)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+        <div class="region-card" data-region="sierra" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
+          <span style="font-size:1.4rem;display:block">🏔️</span><span style="font-size:.7rem;font-weight:800">Sierra</span>
+        </div>
+        <div class="region-card" data-region="costa" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
+          <span style="font-size:1.4rem;display:block">🌊</span><span style="font-size:.7rem;font-weight:800">Costa</span>
+        </div>
+        <div class="region-card" data-region="amazonia" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
+          <span style="font-size:1.4rem;display:block">🌿</span><span style="font-size:.7rem;font-weight:800">Amazonía</span>
+        </div>
+        <div class="region-card" data-region="galapagos" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
+          <span style="font-size:1.4rem;display:block">🐢</span><span style="font-size:.7rem;font-weight:800">Galápagos</span>
+        </div>
+      </div>
+    </div>
     <div style="margin-top:10px">
       <label style="font-size:.8rem;margin-bottom:4px;display:block">Código de tarea de tu prof. (si tienes)</label>
       <div class="codigo-row">
@@ -280,7 +300,39 @@ body.fuente-grande{font-size:19px;}
       <div id="codigo-estado"></div>
     </div>
   </div>
-  <div class="consentimiento-box">
+  <!-- SELECTOR PERFIL DUA -->
+<div id="selector-perfil-wrap" style="width:100%;max-width:520px;margin-bottom:14px;display:none">
+  <div style="font-size:.82rem;font-weight:800;color:var(--texto2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center">
+    ♿ Perfil de accesibilidad (opcional)
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+    <div class="perfil-card" data-perfil="ninguno" onclick="seleccionarPerfil(this)" style="background:var(--naranja);color:#fff;border:2px solid var(--naranja)">
+      <span style="font-size:1.3rem">👤</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Estándar</span>
+    </div>
+    <div class="perfil-card" data-perfil="lector" onclick="seleccionarPerfil(this)">
+      <span style="font-size:1.3rem">📖</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Lector</span>
+      <span style="font-size:.6rem;opacity:.7;display:block">Dislexia/Disgrafía</span>
+    </div>
+    <div class="perfil-card" data-perfil="atencion" onclick="seleccionarPerfil(this)">
+      <span style="font-size:1.3rem">⏱️</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Atención</span>
+      <span style="font-size:.6rem;opacity:.7;display:block">TDAH/TAC</span>
+    </div>
+    <div class="perfil-card" data-perfil="comunicacion" onclick="seleccionarPerfil(this)">
+      <span style="font-size:1.3rem">🗣️</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Comunicación</span>
+      <span style="font-size:.6rem;opacity:.7;display:block">TEA/Asperger</span>
+    </div>
+    <div class="perfil-card" data-perfil="visual" onclick="seleccionarPerfil(this)">
+      <span style="font-size:1.3rem">👁️</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Visual</span>
+      <span style="font-size:.6rem;opacity:.7;display:block">Sordomudo/Visión</span>
+    </div>
+    <div class="perfil-card" data-perfil="apoyo" onclick="seleccionarPerfil(this)">
+      <span style="font-size:1.3rem">🤝</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Apoyo</span>
+      <span style="font-size:.6rem;opacity:.7;display:block">DI leve/TOA</span>
+    </div>
+  </div>
+  <div id="perfil-desc" style="text-align:center;font-size:.75rem;color:var(--texto2);margin-top:6px;min-height:16px"></div>
+</div>
+<div class="consentimiento-box">
     <label>
       <input type="checkbox" id="check-consentimiento" onchange="verificarInicio()">
       <span>Confirmo que tengo permiso de mis padres o tutor para usar esta plataforma educativa con Inteligencia Artificial. Los datos se usan solo con fines educativos.</span>
@@ -316,6 +368,8 @@ body.fuente-grande{font-size:19px;}
     <button id="tab-cuentos"   class="tab-btn"        onclick="cambiarModo('cuentos')">📖 Cuentos</button>
     <button id="tab-plantilla" class="tab-btn"        onclick="cambiarModo('plantilla')">📋 Plantillas</button>
     <button id="tab-leer"      class="tab-btn"        onclick="cambiarModo('leer')">🔊 Leer</button>
+    <button id="tab-taller"    class="tab-btn"        onclick="cambiarModo('taller')">✍️ Taller</button>
+    <button id="tab-intercultural" class="tab-btn"   onclick="abrirLiteraturaEcuatoriana()">🇪🇨 Ecuador</button>
   </div>
   <div id="chat-body"></div>
   <div id="chat-footer">
@@ -388,7 +442,9 @@ body.fuente-grande{font-size:19px;}
 <div id="notif-insignia"></div>
 
 <script>
-const GROQ_KEY='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';
+// ══ SEGURIDAD: API key en Cloudflare Worker (proxy seguro) ══
+// Reemplaza la URL con tu worker después de desplegarlo
+const GROQ_PROXY_URL='https://tiny-bushprofesor-buho-proxy.gobalnetsml.workers.dev';
 const FB_CFG={apiKey:"AIzaSyAvsGXkR6ybJgpMcToEYyR0uOuLtxTbR6M",authDomain:"profesor-buho.firebaseapp.com",projectId:"profesor-buho",storageBucket:"profesor-buho.firebasestorage.app",messagingSenderId:"137425768037",appId:"1:137425768037:web:22ed4d8b4bb4b95d5b008c"};
 
 // IMÁGENES
@@ -396,31 +452,128 @@ const IMGS={cuento:'https://images.unsplash.com/photo-1512820790803-83ca734da794
 function obtenerImg(txt,modo){if(!txt)return IMGS[modo]||null;const t=txt.toLowerCase();for(const[k,u]of Object.entries(IMGS)){if(t.includes(k))return u;}if(t.includes('cuento')||t.includes('había'))return IMGS.cuento;if(t.includes('carta'))return IMGS.carta;if(t.includes('noticia'))return IMGS.noticia;if(t.includes('poema'))return IMGS.poema;if(modo==='cuentos')return IMGS.cuentos;return null;}
 
 // PROMPTS — con rúbrica por criterios
+// ══ MAPA CURRICULAR MINEDUC — por subnivel ══
+// ══ INTERCULTURALIDAD — LOEI Art. 2z ══
+// Contextos culturales reales del Ecuador por región
+const CONTEXTOS_INTERCULTURALES = {
+  sierra:{
+    nombre:'Sierra',emoji:'🏔️',
+    pueblos:['Kichwa','Otavalo','Saraguro','Salasaca','Chibuleo','Panzaleo'],
+    lengua:'Kichwa',
+    saludos:{kichwa:'Allí punlla (Buenos días)','gracias':'Yupaychani'},
+    literaturaLocal:['La leyenda del Cotopaxi','El Taita Imbabura','La Mama Tungurahua','Leyenda de Cantuña','La capa del estudiante'],
+    textosTipicos:['leyendas de volcanes','historias de páramo','cuentos de animales andinos (cóndor, llama, vicuña)'],
+    conectoresRegionales:['en la comunidad','en la minga','en el mercado indígena'],
+    palabrasKichwa:['ayllu (familia/comunidad)','pacha (tierra/tiempo)','sumak (hermoso/bueno)','llulla (mentira)','yachak (sabio)']
+  },
+  costa:{
+    nombre:'Costa',emoji:'🌊',
+    pueblos:['Montubio','Afroecuatoriano','Tsáchila','Chachi','Épera'],
+    lengua:'Español costeño',
+    literaturaLocal:['El delfín rosado (leyenda amazónica-costa)','Amorfinos montubios','Coplas de la costa','El Sal si puedes','Leyendas de Manabí'],
+    textosTipicos:['amorfinos y décimas','historias de pesca','cuentos de la selva tropical','relatos del río'],
+    conectoresRegionales:['en el recinto','en la hacienda','junto al río'],
+    expresionesRegionales:['¡Ajá!','macho (amigo)','vale (de acuerdo)']
+  },
+  amazonia:{
+    nombre:'Amazonía',emoji:'🌿',
+    pueblos:['Shuar','Achuar','Kichwa amazónico','Waorani','Siona','Secoya','Cofán','Zápara'],
+    lengua:'Shuar y Kichwa amazónico',
+    saludos:{shuar:'Penker pujustin (Vive bien)'},
+    literaturaLocal:['Leyenda de Etsa (sol shuar)','El sapo Kuartam','El ajutap','Tsunki (espíritu del agua)','La anaconda y el hombre'],
+    textosTipicos:['leyendas de la selva','historias de animales amazónicos (jaguar, anaconda, guacamayo)','relatos de curación'],
+    conectoresRegionales:['en la chakra','en la selva','junto al río amazónico'],
+    palabrasShuar:['arutam (espíritu sagrado)','uwishin (curandero)','nua (mujer)','aishman (hombre)']
+  },
+  galapagos:{
+    nombre:'Galápagos',emoji:'🐢',
+    pueblos:['Colonos de Galápagos'],
+    literaturaLocal:['La tortuga gigante de Santa Cruz','El piquero de patas azules','La iguana marina','Historias de los primeros colonos'],
+    textosTipicos:['textos sobre biodiversidad única','historias de conservación','relatos de exploradores','cuentos sobre Darwin'],
+    conectoresRegionales:['en la isla','en el archipiélago','en la reserva marina']
+  }
+};
+
+const MAPA_CURRICULAR = {
+  elemental: {
+    textos:['relato de experiencias personales','descripción de animales o lugares','cuento corto','recreación de cuento popular ecuatoriano'],
+    dcd:'LL.2.4.1 — LL.2.4.4 — LL.2.4.7',
+    contextos:['cuentos populares ecuatorianos','leyendas de la Sierra','animales del Ecuador','paisajes naturales'],
+    conectores:['primero','luego','después','finalmente','y','también'],
+    ortografia:'tildes básicas, uso de h, b/v, c/s/z'
+  },
+  media: {
+    textos:['párrafo descriptivo','hoja volante','narración oral','relato histórico','carta','afiche','autobiografía','folleto','texto instructivo'],
+    dcd:'LL.3.4.1 — LL.3.4.6 — LL.3.4.12',
+    contextos:['leyendas ecuatorianas (Etsa, delfín rosado, maíz colorado)','amorfinos y coplas','megadiversidad del Ecuador','personajes históricos del Ecuador'],
+    conectores:['sin embargo','por lo tanto','además','aunque','ya que','en consecuencia'],
+    ortografia:'tildes agudas/graves/esdrújulas, uso de j, uso de coma'
+  },
+  superior: {
+    textos:['noticia','crónica','reportaje','artículo de opinión','ensayo','reseña','informe','texto argumentativo'],
+    dcd:'LL.4.4.1 — LL.4.4.6 — LL.4.4.8',
+    contextos:['textos periodísticos','textos académicos','literatura ecuatoriana','análisis crítico','investigación'],
+    conectores:['no obstante','por consiguiente','en efecto','a pesar de','dado que','en síntesis'],
+    ortografia:'puntuación completa, tildes diacríticas, normas de citación'
+  }
+};
+
+// ══ NEUROEDUCACIÓN: principios aplicados ══
+// 1. Aprendizaje desde la emoción (LeDoux) — siempre empezar con conexión emocional
+// 2. Dopamina y recompensa inmediata — celebrar logros en el momento
+// 3. Carga cognitiva controlada (Sweller) — información progresiva
+// 4. Memoria emocional — conectar contenido con experiencias personales del niño
+// 5. Práctica espaciada — retomar errores frecuentes
+// 6. Flow state — desafío calibrado al nivel
+
 const PROMPTS={
   revisar:{
-    elemental:`Eres Profesor Búho, tutor 7-9 años Ecuador. Revisa el texto. Si hay foto transcribe primero.
-RESPONDE con separador |||:
-PARTE1: Versión mejorada simple y clara
+    elemental:`Eres Profesor Búho, tutor afectuoso para niños de 7-9 años del Ecuador. NEUROEDUCACIÓN: Conecta siempre con la emoción del niño antes de corregir. Celebra primero, corrige después.
+Si hay foto, transcribe primero el texto.
+RESPONDE separando con |||:
+PARTE1: Versión mejorada del texto (simple, clara, respetando la voz del niño).
+Usa vocabulario del libro escolar: conectores temporales (primero, luego, después, finalmente).
+Si escribió sobre Ecuador, enriquece con elementos culturales (leyendas, animales, paisajes ecuatorianos).
 |||
-PARTE2: FORTALEZA: (elogio concreto). SUGERENCIAS: (máximo 2 simples). RUBRICA_JSON:{"ortografia":X,"coherencia":X,"creatividad":X,"presentacion":X} donde X es 1-5
+PARTE2: 🌟 FORTALEZA: (elogio genuino y específico — qué hizo bien emocionalmente y lingüísticamente).
+💡 SUGERENCIAS: máximo 2, en lenguaje de niño de 7-9 años.
+RUBRICA_JSON:{"ortografia":X,"coherencia":X,"creatividad":X,"presentacion":X} donde X es 1-5
+DCD trabajada: LL.2.4 (escritura elemental)
 |||
-PARTE3: Pregunta sencilla y mini-reto
+PARTE3: Pregunta que conecte con su experiencia personal (neuroeducación: memoria emocional). Mini-reto con el siguiente tipo de texto del libro: descripción o cuento popular ecuatoriano.
 Sin guiones bajos ni asteriscos.`,
-    media:`Eres Profesor Búho, tutor 9-11 años (5-7 EGB Ecuador). Si hay foto transcribe primero.
-RESPONDE con separador |||:
-PARTE1: Versión mejorada completa (conserva la voz del niño, corrige ortografía, coherencia, cohesión)
+    media:`Eres Profesor Búho, tutor pedagógico para 9-11 años (5°-7° EGB Ecuador). NEUROEDUCACIÓN: El aprendizaje ocurre mejor cuando hay conexión emocional. Empieza siempre reconociendo el esfuerzo.
+Si hay foto, transcribe primero.
+RESPONDE separando con |||:
+PARTE1: Versión mejorada completa. Conserva la voz auténtica del estudiante. Corrige ortografía, coherencia y cohesión.
+Usa conectores del nivel: sin embargo, por lo tanto, además, aunque, ya que.
+Si el texto es sobre Ecuador, enriquece con contexto intercultural (leyendas ecuatorianas, amorfinos, megadiversidad, personajes históricos).
+Referencia el proceso de escritura del libro: planificación → redacción → revisión.
 |||
-PARTE2: FORTALEZA: (1 cosa concreta). SUGERENCIAS: (máximo 3). RUBRICA_JSON:{"ortografia":X,"coherencia":X,"cohesion":X,"vocabulario":X} donde X es 1-5
+PARTE2: 🌟 FORTALEZA: (1 logro concreto y específico — nombra qué hizo bien).
+💡 SUGERENCIAS: máximo 3, con ejemplos concretos.
+RUBRICA_JSON:{"ortografia":X,"coherencia":X,"cohesion":X,"vocabulario":X} donde X es 1-5
+DCD trabajada: LL.3.4 (escritura media)
 |||
-PARTE3: Pregunta metacognitiva y mini-reto
+PARTE3: Pregunta metacognitiva (¿qué decisión tomaste al escribir esto?). 
+Mini-reto con el siguiente tipo de texto del libro escolar de 5°-7°: hoja volante, relato histórico, carta, afiche o autobiografía.
 Sin guiones bajos ni asteriscos.`,
-    superior:`Eres Profesor Búho, tutor 11-14 años (8-10 EGB Ecuador). Si hay foto transcribe primero.
-RESPONDE con separador |||:
-PARTE1: Texto mejorado con corrección completa
+    superior:`Eres Profesor Búho, tutor lingüístico para 11-14 años (8°-10° EGB Ecuador). NEUROEDUCACIÓN: A esta edad la autonomía es clave — guía, no corrijas todo.
+Si hay foto, transcribe primero.
+RESPONDE separando con |||:
+PARTE1: Texto mejorado con corrección técnica completa.
+Usa conectores del nivel superior: no obstante, por consiguiente, en efecto, a pesar de, dado que, en síntesis.
+Si produce texto periodístico (noticia, crónica, reportaje), aplica estructura de la pirámide invertida.
+Si produce ensayo, identifica: tesis, argumentos, conclusión.
+Referencia las normas de citación cuando corresponda.
 |||
-PARTE2: 2 fortalezas, 3 observaciones técnicas. RUBRICA_JSON:{"ortografia":X,"coherencia":X,"cohesion":X,"registro":X,"argumentacion":X} donde X es 1-5
+PARTE2: 2 fortalezas técnicas específicas (nombra el recurso lingüístico).
+3 observaciones técnicas con la regla aplicada.
+RUBRICA_JSON:{"ortografia":X,"coherencia":X,"cohesion":X,"registro":X,"argumentacion":X} donde X es 1-5
+DCD trabajada: LL.4.4 (escritura superior)
 |||
-PARTE3: 2 preguntas de autorregulación y estrategia de mejora`
+PARTE3: 2 preguntas de autorregulación metacognitiva (nivel inferencial y crítico).
+Estrategia de mejora concreta para el próximo texto.`
   },
   tutor:{
     elemental:`Eres Profesor Búho corrector 7-9 años. SIEMPRE incluye:
@@ -480,6 +633,24 @@ PARTE3: Pregunta sobre intención comunicativa y taller de reescritura`
     elemental:`Eres Profesor Búho ayudando a leer en voz alta 7-9 años. Prepara el texto con marcas que el sistema procesa automáticamente: <<PAUSA>> para pausa breve, <<FUERTE>> antes de palabra importante, <<SUAVE>> para bajar voz. No expliques las marcas, úsalas dentro del texto. Pregunta qué palabras fueron difíciles.`,
     media:`Eres Profesor Búho con lectura expresiva 9-11 años. Usa marcas: <<PAUSA_CORTA>> <<PAUSA_LARGA>> <<ENFASIS>> <<VOZ_BAJA>>. Colócalas dentro del texto. Identifica 3-5 palabras difíciles. Haz preguntas de comprensión. No expliques las marcas.`,
     superior:`Eres Profesor Búho con lectura crítica 11-14 años. Usa marcas: <<PAUSA>> <<ENFASIS>> <<RAPIDO>> <<LENTO>>. Formula preguntas: literal, inferencial, crítico.`
+  },
+  taller:{
+    elemental:`Eres el Profesor Búho guiando el TALLER DE ESCRITURA para niños de 7-9 años Ecuador (DCD LL.2.4.1 — LL.2.4.6).
+El mensaje indica la FASE: PLANIFICACIÓN, REDACCIÓN o REVISIÓN.
+PLANIFICACIÓN: Haz UNA pregunta a la vez para ayudar al niño a planificar su texto. ¿Sobre qué escribirás? ¿Quién es el personaje? ¿Qué problema tiene? Usa emojis. Sé muy amigable. Cuando tenga el plan, muéstralo con organizador gráfico simple.
+REDACCIÓN: Ayuda a escribir oración por oración. Celebra cada oración. Sugiere conectores: primero, luego, después, finalmente. Si se traba, da dos opciones para elegir.
+REVISIÓN: Corrección completa con rúbrica. RUBRICA_JSON:{"ortografia":X,"coherencia":X,"creatividad":X,"presentacion":X} donde X es 1-5.
+NEUROEDUCACIÓN: El proceso importa más que el resultado. Celebra el esfuerzo en cada fase.`,
+    media:`Eres el Profesor Búho guiando el TALLER DE ESCRITURA para 9-11 años Ecuador (DCD LL.3.4.6 — Autorregular la producción escrita).
+El mensaje indica la FASE.
+PLANIFICACIÓN: Guía el organizador gráfico según el tipo de texto (hoja volante, relato histórico, carta, autobiografía, folleto). Usa la estructura planificación-redacción-revisión del libro escolar. Una pregunta a la vez.
+REDACCIÓN: Acompaña párrafo por párrafo. Sugiere conectores del nivel: sin embargo, por lo tanto, además, aunque, ya que. Refuerza la coherencia entre párrafos.
+REVISIÓN: Corrección completa. RUBRICA_JSON:{"ortografia":X,"coherencia":X,"cohesion":X,"vocabulario":X} donde X es 1-5. DCD: LL.3.4.6.`,
+    superior:`Eres el Profesor Búho guiando el TALLER DE ESCRITURA para 11-14 años Ecuador (DCD LL.4.4.5 — Proceso de producción textual).
+El mensaje indica la FASE.
+PLANIFICACIÓN: Guía tesis, argumentos, estructura. Para texto periodístico: pirámide invertida. Para ensayo: tesis-argumentos-conclusión. Para informe: introducción-desarrollo-conclusiones.
+REDACCIÓN: Retroalimentación técnica por párrafo. Conectores complejos: no obstante, por consiguiente, en efecto. Normas de citación cuando corresponda.
+REVISIÓN: Análisis lingüístico completo. RUBRICA_JSON:{"ortografia":X,"coherencia":X,"cohesion":X,"registro":X,"argumentacion":X} donde X es 1-5.`
   }
 };
 
@@ -503,17 +674,142 @@ const BIENVENIDAS={
     media:'¡Plantillas! 📋<br><div class="plantillas-grid"><div class="plantilla-card" onclick="usarPlantilla(\'cuento\')"><span class="plantilla-icono">📖</span><span class="plantilla-nombre">Cuento</span></div><div class="plantilla-card" onclick="usarPlantilla(\'noticia\')"><span class="plantilla-icono">📰</span><span class="plantilla-nombre">Noticia</span></div><div class="plantilla-card" onclick="usarPlantilla(\'carta\')"><span class="plantilla-icono">💌</span><span class="plantilla-nombre">Carta</span></div><div class="plantilla-card" onclick="usarPlantilla(\'poema\')"><span class="plantilla-icono">🌟</span><span class="plantilla-nombre">Poema</span></div></div>',
     superior:'¡Plantillas avanzadas! 📋<br><div class="plantillas-grid"><div class="plantilla-card" onclick="usarPlantilla(\'ensayo\')"><span class="plantilla-icono">📝</span><span class="plantilla-nombre">Ensayo</span></div><div class="plantilla-card" onclick="usarPlantilla(\'cronica\')"><span class="plantilla-icono">📰</span><span class="plantilla-nombre">Crónica</span></div><div class="plantilla-card" onclick="usarPlantilla(\'resena\')"><span class="plantilla-icono">⭐</span><span class="plantilla-nombre">Reseña</span></div><div class="plantilla-card" onclick="usarPlantilla(\'informe\')"><span class="plantilla-icono">🔬</span><span class="plantilla-nombre">Informe</span></div></div>'
   },
-  leer:{elemental:'🔊 Pega el texto que quieres practicar leer.',media:'🔊 Pega el texto para leer expresivamente.',superior:'🔊 Lectura crítica. Pega el texto.'}
+  leer:{elemental:'🔊 Pega el texto que quieres practicar leer.',media:'🔊 Pega el texto para leer expresivamente.',superior:'🔊 Lectura crítica. Pega el texto.'},
+  taller:{
+    elemental:'__TALLER__',
+    media:'__TALLER__',
+    superior:'__TALLER__'
+  }
 };
 
 let nivelSel=null,nombreNiño='',modoActual='revisar',historial=[],fuenteGrande=false,tareaActual=null;
-let progreso={textosRevisados:0,erroresCorregidos:0,cuentosCreados:0,rachaActual:0,ultimaFecha:'',insignias:[],historial:[],juegosJugados:0,mejorOrtografia:0,erroresFrecuentes:{},evolucionSemanal:[],institucion:'',paralelo:''};
+let perfilAcceso='ninguno';
+let regionEstudiante='sierra'; // sierra|costa|amazonia|galapagos // DUA: ninguno, lector, atencion, comunicacion, visual, apoyo
+
+// ══ PERFILES DE ACCESIBILIDAD DUA — Mineduc Ecuador ══
+const PERFILES_DUA = {
+  ninguno: {
+    nombre:'Estándar',icono:'👤',
+    descripcion:'Sin adaptaciones especiales',
+    css:'',
+    timerDescanso:20*60,
+    instruccionesCortas:false,
+    lenguajeLiteral:false,
+    prioridadContenido:false,
+    promptExtra:''
+  },
+  lector: {
+    nombre:'Modo Lector',icono:'📖',
+    descripcion:'Para dislexia y disgrafía',
+    css:`body{font-family:'Arial',sans-serif!important;letter-spacing:.08em;word-spacing:.15em;}
+    #chat-body{background:#FFF8E1!important;} .burbuja{line-height:2!important;font-size:1.05rem!important;}
+    #chat-input{font-size:1.1rem!important;line-height:2!important;}`,
+    timerDescanso:25*60,
+    instruccionesCortas:false,
+    lenguajeLiteral:false,
+    prioridadContenido:true,
+    promptExtra:'ADAPTACIÓN DISLEXIA/DISGRAFÍA: Prioriza el contenido y las ideas sobre la ortografía. No penalices errores de escritura. Valora el mensaje. Da retroalimentación positiva primero. Instrucciones cortas y claras. Usa lenguaje sencillo.'
+  },
+  atencion: {
+    nombre:'Modo Atención',icono:'⏱️',
+    descripcion:'Para TDAH y TAC',
+    css:`.burbuja-bot{max-width:92%!important;} #chat-body{background:#F3F8FF!important;}
+    .burbuja{font-size:.95rem!important;}`,
+    timerDescanso:10*60,
+    instruccionesCortas:true,
+    lenguajeLiteral:false,
+    prioridadContenido:false,
+    promptExtra:'ADAPTACIÓN TDAH/TAC: Divide SIEMPRE las instrucciones en pasos numerados cortos (máximo 2 líneas cada uno). Usa viñetas. Sé muy directo. Una idea por vez. Celebra cada pequeño logro inmediatamente. No des textos largos. Máximo 3 oraciones por respuesta cuando sea posible.'
+  },
+  comunicacion: {
+    nombre:'Modo Comunicación',icono:'🗣️',
+    descripcion:'Para TEA y Asperger',
+    css:`body{font-family:'Arial',sans-serif!important;} #chat-body{background:#F5F5F5!important;}
+    .burbuja-bot{border-left:4px solid #1565C0!important;}`,
+    timerDescanso:20*60,
+    instruccionesCortas:true,
+    lenguajeLiteral:true,
+    prioridadContenido:false,
+    promptExtra:'ADAPTACIÓN TEA/ASPERGER: Usa lenguaje COMPLETAMENTE LITERAL. NUNCA uses metáforas, ironías, frases figuradas ni humor implícito. Sé predecible y consistente. Explica el propósito de cada actividad. Estructura fija: 1) Qué harás, 2) Por qué, 3) Cómo. Sin sorpresas. Respuestas breves y claras.'
+  },
+  visual: {
+    nombre:'Modo Visual',icono:'👁️',
+    descripcion:'Para sordomudos y baja visión',
+    css:`.btn-head,.tab-btn{font-size:.85rem!important;padding:8px 12px!important;}
+    #chat-body{background:#FFFFF0!important;} .burbuja{font-size:1.1rem!important;line-height:1.9!important;}
+    .av-bot{font-size:2.2rem!important;}`,
+    timerDescanso:25*60,
+    instruccionesCortas:false,
+    lenguajeLiteral:false,
+    prioridadContenido:false,
+    promptExtra:'ADAPTACIÓN VISUAL/SORDOMUDO: Todo en texto escrito, NUNCA des instrucciones que dependan del audio. Usa muchos emojis descriptivos como apoyo visual. Estructura clara con espacios. No asumas comunicación oral. Sé muy visual en las descripciones.'
+  },
+  apoyo: {
+    nombre:'Modo Apoyo',icono:'🤝',
+    descripcion:'Para discapacidad intelectual leve y TOA',
+    css:`#chat-body{background:#F1F8E9!important;} .burbuja{font-size:1.1rem!important;line-height:2!important;}
+    #chat-input{font-size:1.1rem!important;}`,
+    timerDescanso:15*60,
+    instruccionesCortas:true,
+    lenguajeLiteral:true,
+    prioridadContenido:true,
+    promptExtra:'ADAPTACIÓN DISCAPACIDAD INTELECTUAL LEVE/TOA: Vocabulario MUY simple. Una sola idea por vez. Frases cortas de máximo 8 palabras. NUNCA uses "debes" o "tienes que" — usa "puedes" o "qué tal si". Celebra TODOS los logros, por pequeños que sean. Repite y refuerza con paciencia. Instrucciones en un solo paso a la vez.'
+  }
+};
+let progreso={textosRevisados:0,erroresCorregidos:0,cuentosCreados:0,rachaActual:0,ultimaFecha:'',insignias:[],historial:[],juegosJugados:0,mejorOrtografia:0,erroresFrecuentes:{},evolucionSemanal:[],institucion:'',paralelo:'',
+  portafolio:[] // [{fecha,modo,dcd,textoOriginal,textoMejorado,rubrica,destreza,nivel}]
+};
 let audioState={partes:[],parteActual:0,pausado:false,btnId:null};
 let tiempoActivo=0,intervaloTiempo=null,alertaMostrada=false,timerDescanso=null,segundosDescanso=300;
 let tiempoInicioSesionLocal=null;
 let chatHistorial=[];
 
-function seleccionarNivel(el){document.querySelectorAll('.tarjeta-nivel').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');nivelSel=el.dataset.nivel;verificarInicio();}
+function seleccionarRegion(el){
+  document.querySelectorAll('.region-card').forEach(r=>{
+    r.style.background='#fff';r.style.borderColor='#E0E0E0';
+  });
+  el.style.background='var(--naranja-cl)';el.style.borderColor='var(--naranja)';
+  regionEstudiante=el.dataset.region;
+  // Guardar en progreso
+  if(progreso) progreso.region=regionEstudiante;
+}
+
+function seleccionarPerfil(el){
+  document.querySelectorAll('.perfil-card').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel');
+  perfilAcceso = el.dataset.perfil;
+  const p = PERFILES_DUA[perfilAcceso];
+  document.getElementById('perfil-desc').textContent = p ? p.descripcion : '';
+}
+
+function mostrarSelectorPerfil(){
+  const wrap = document.getElementById('selector-perfil-wrap');
+  if(wrap) wrap.style.display = 'block';
+  // Pre-seleccionar "ninguno"
+  const std = document.querySelector('.perfil-card[data-perfil="ninguno"]');
+  if(std) std.classList.add('sel');
+}
+
+function aplicarPerfilDUA(){
+  const perfil = PERFILES_DUA[perfilAcceso];
+  if(!perfil || perfilAcceso === 'ninguno') return;
+  // Inyectar CSS del perfil
+  const styleId = 'style-dua';
+  let styleEl = document.getElementById(styleId);
+  if(!styleEl){ styleEl = document.createElement('style'); styleEl.id = styleId; document.head.appendChild(styleEl); }
+  styleEl.textContent = perfil.css || '';
+  // Ajustar temporizador de descanso
+  if(perfil.timerDescanso) window._limiteDescanso = perfil.timerDescanso;
+  // Mostrar indicador de perfil activo en el header
+  const badge = document.createElement('span');
+  badge.id = 'badge-perfil';
+  badge.style.cssText = 'background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:.68rem;font-weight:800;margin-left:4px';
+  badge.textContent = perfil.icono + ' ' + perfil.nombre;
+  const nivelHdr = document.getElementById('nivel-header');
+  if(nivelHdr && !document.getElementById('badge-perfil')) nivelHdr.after(badge);
+}
+
+function seleccionarNivel(el){document.querySelectorAll('.tarjeta-nivel').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');nivelSel=el.dataset.nivel;mostrarSelectorPerfil();verificarInicio();}
 function verificarInicio(){const n=document.getElementById('input-nombre').value.trim();const c=document.getElementById('check-consentimiento').checked;document.getElementById('btn-iniciar').disabled=!(nivelSel&&n.length>=2&&c);}
 
 let tareaActualData=null;
@@ -535,11 +831,13 @@ function btnIniciar(){
   const paralelo=document.getElementById('input-paralelo').value.trim();
   cargarProgreso();
   progreso.institucion=institucion; progreso.paralelo=paralelo;
+  regionEstudiante=progreso.region||'sierra';
   document.getElementById('pantalla-inicio').style.display='none';
   const pc=document.getElementById('pantalla-chat');pc.style.display='flex';pc.style.flexDirection='column';pc.style.minHeight='100vh';
   const NOM={elemental:'Básica Elemental (2°–4°)',media:'Básica Media (5°–7°)',superior:'Básica Superior (8°–10°)'};
   document.getElementById('saludo-header').textContent='¡Hola, '+nombreNiño+'!';
   document.getElementById('nivel-header').textContent=NOM[nivelSel];
+  aplicarPerfilDUA();
   actualizarRacha();cambiarModo('revisar');iniciarTemporizador();tiempoInicioSesionLocal=Date.now();
   // Mostrar botón chat solo si tiene tarea con docente
   if(tareaActualData){document.getElementById('btn-chat-prof').style.display='block';}
@@ -568,6 +866,44 @@ function registrarErrores(texto,rubricaObj){
   });
 }
 
+// Avance de fase en el taller
+function avanzarFaseTaller(texto){
+  if(modoActual!=='taller')return;
+  const t=texto.toLowerCase();
+  if(t.includes('planif')&&tallerFase<=1){tallerFase=1;}
+  else if((t.includes('redact')||t.includes('escrib')&&tallerFase>=1)&&tallerFase<2){tallerFase=2;}
+  else if(t.includes('revis')&&tallerFase>=2){tallerFase=3;}
+  actualizarIndicadorTaller();
+  // Botones de avance entre fases
+  if(tallerFase===1){
+    setTimeout(()=>{
+      const b=document.createElement('div');b.className='msg-acciones';
+      b.innerHTML='<button class="btn-accion verde-btn" onclick="pasarAFaseRedaccion()">✏️ Ya tengo mi plan — ¡A escribir!</button>';
+      document.getElementById('chat-body').appendChild(b);
+      document.getElementById('chat-body').scrollTop=99999;
+    },500);
+  }
+  if(tallerFase===2){
+    setTimeout(()=>{
+      const b=document.createElement('div');b.className='msg-acciones';
+      b.innerHTML='<button class="btn-accion verde-btn" onclick="pasarAFaseRevision()">🔍 Terminé de escribir — ¡A revisar!</button>';
+      document.getElementById('chat-body').appendChild(b);
+      document.getElementById('chat-body').scrollTop=99999;
+    },500);
+  }
+}
+
+window.pasarAFaseRedaccion=function(){
+  tallerFase=2;actualizarIndicadorTaller();
+  document.getElementById('chat-input').value='FASE: REDACCIÓN — Ayúdame a escribir el texto';
+  enviarMensaje();
+};
+window.pasarAFaseRevision=function(){
+  tallerFase=3;actualizarIndicadorTaller();
+  document.getElementById('chat-input').value='FASE: REVISIÓN — Por favor revisa mi texto completo: '+tallerTextoAcumulado;
+  enviarMensaje();
+};
+
 function registrarAccion(tipo,txt,rubricaObj){
   if(tipo==='revisar')progreso.textosRevisados++;
   if(tipo==='tutor')progreso.erroresCorregidos++;
@@ -581,6 +917,23 @@ function registrarAccion(tipo,txt,rubricaObj){
   else{progreso.evolucionSemanal.push({semana,textos:1,sumaOrtografia:rubricaObj?rubricaObj.ortografia||0:0});}
   if(progreso.evolucionSemanal.length>8)progreso.evolucionSemanal.shift();
   if(txt)progreso.historial.unshift({fecha:new Date().toLocaleDateString('es-EC'),modo:tipo,preview:txt.slice(0,80)+(txt.length>80?'…':'')});
+  // ══ PORTAFOLIO DIGITAL — evidencia por destreza ══
+  if(txt && rubricaObj){
+    const mapa = MAPA_CURRICULAR[nivelSel||'media'];
+    const dcd = mapa ? mapa.dcd : '';
+    if(!progreso.portafolio) progreso.portafolio=[];
+    progreso.portafolio.unshift({
+      fecha: new Date().toLocaleDateString('es-EC'),
+      hora: new Date().toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'}),
+      modo: tipo,
+      nivel: nivelSel||'media',
+      dcd: dcd,
+      textoOriginal: txt.slice(0,500),
+      rubrica: rubricaObj,
+      perfilAcceso: perfilAcceso||'ninguno'
+    });
+    if(progreso.portafolio.length>30) progreso.portafolio.pop();
+  }
   if(progreso.historial.length>20)progreso.historial.pop();
   verificarInsignias();guardarProgreso();
   if(typeof window.fbActualizarProgreso==='function')window.fbActualizarProgreso({textosRevisados:progreso.textosRevisados,erroresCorregidos:progreso.erroresCorregidos,cuentosCreados:progreso.cuentosCreados,juegosJugados:progreso.juegosJugados||0});
@@ -611,7 +964,34 @@ function abrirProgreso(){
     efOrdenado.forEach(([cat,n])=>{htmlEF+=`<div class="ef-item"><span>${NOMBRES_CAT[cat]||cat}</span><span class="ef-count">${n} veces</span></div>`;});
     htmlEF+='</div>';
   }
-  b.innerHTML='<div class="stat-card"><div class="stat-icono">📝</div><div class="stat-info"><div class="stat-num">'+progreso.textosRevisados+'</div><div class="stat-label">Textos revisados</div></div></div><div class="stat-card"><div class="stat-icono">✏️</div><div class="stat-info"><div class="stat-num">'+progreso.erroresCorregidos+'</div><div class="stat-label">Errores corregidos</div></div></div><div class="stat-card"><div class="stat-icono">📖</div><div class="stat-info"><div class="stat-num">'+progreso.cuentosCreados+'</div><div class="stat-label">Cuentos creados</div></div></div><div class="stat-card"><div class="stat-icono">🔥</div><div class="stat-info"><div class="stat-num">'+progreso.rachaActual+'</div><div class="stat-label">Días seguidos</div></div></div>'+htmlEvol+htmlEF+'<p style="font-weight:800;margin:14px 0 8px">🏅 Insignias</p><div class="insignias-grid">'+INSIGNIAS_DEF.map(ins=>'<div class="insignia-card '+(progreso.insignias.includes(ins.id)?'desbloqueada':'')+'"><span class="ins-icono">'+ins.icono+'</span><span class="ins-nombre">'+ins.nombre+'</span></div>').join('')+'</div>'+(progreso.historial.length>0?'<p style="font-weight:800;margin:14px 0 8px">📋 Últimos textos</p>'+progreso.historial.slice(0,5).map(h=>'<div class="hist-item"><div class="hist-fecha">'+h.fecha+'</div><div>'+h.preview+'</div></div>').join(''):'');
+  // Portafolio digital
+  let htmlPortafolio='';
+  if(progreso.portafolio && progreso.portafolio.length>0){
+    const NOMBRES_MODO={revisar:'Revisar texto',tutor:'Corregir',cuentos:'Cuento',plantilla:'Plantilla',leer:'Lectura'};
+    const COLORES_RUB={1:'#C62828',2:'#E65100',3:'#F9A825',4:'#1565C0',5:'#2E7D32'};
+    htmlPortafolio='<p style="font-weight:800;margin:14px 0 8px;display:flex;align-items:center;gap:6px">📁 Portafolio digital <span style="font-size:.7rem;background:var(--azul);color:#fff;padding:2px 7px;border-radius:20px">'+progreso.portafolio.length+' producciones</span></p>';
+    htmlPortafolio+='<div style="display:flex;flex-direction:column;gap:8px">';
+    progreso.portafolio.slice(0,8).forEach(p=>{
+      const r=p.rubrica||{};
+      const prom=Object.values(r).length?Math.round(Object.values(r).reduce((a,b)=>a+b,0)/Object.values(r).length*10)/10:0;
+      const col=prom>=4?'#2E7D32':prom>=3?'#F9A825':'#C62828';
+      const accIcon={ninguno:'',lector:'📖',atencion:'⏱️',comunicacion:'🗣️',visual:'👁️',apoyo:'🤝'};
+      htmlPortafolio+=`<div style="background:#F8F9FA;border-radius:12px;padding:11px 13px;border-left:3px solid ${col}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span style="font-weight:800;font-size:.8rem">${NOMBRES_MODO[p.modo]||p.modo} ${accIcon[p.perfilAcceso]||''}</span>
+          <span style="font-size:.7rem;color:#999">${p.fecha} ${p.hora||''}</span>
+        </div>
+        <div style="font-size:.75rem;color:var(--texto2);margin-bottom:5px">${p.textoOriginal?p.textoOriginal.slice(0,80)+'…':''}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">
+          ${Object.entries(r).map(([k,v])=>`<span style="background:${COLORES_RUB[v]||'#999'};color:#fff;border-radius:20px;padding:1px 7px;font-size:.65rem;font-weight:800">${k.slice(0,4)} ${v}/5</span>`).join('')}
+        </div>
+        <div style="font-size:.68rem;color:var(--azul);font-weight:700">${p.dcd||''}</div>
+      </div>`;
+    });
+    htmlPortafolio+='</div>';
+  }
+
+  b.innerHTML='<div class="stat-card"><div class="stat-icono">📝</div><div class="stat-info"><div class="stat-num">'+progreso.textosRevisados+'</div><div class="stat-label">Textos revisados</div></div></div><div class="stat-card"><div class="stat-icono">✏️</div><div class="stat-info"><div class="stat-num">'+progreso.erroresCorregidos+'</div><div class="stat-label">Errores corregidos</div></div></div><div class="stat-card"><div class="stat-icono">📖</div><div class="stat-info"><div class="stat-num">'+progreso.cuentosCreados+'</div><div class="stat-label">Cuentos creados</div></div></div><div class="stat-card"><div class="stat-icono">🔥</div><div class="stat-info"><div class="stat-num">'+progreso.rachaActual+'</div><div class="stat-label">Días seguidos</div></div></div>'+htmlEvol+htmlEF+'<p style="font-weight:800;margin:14px 0 8px">🏅 Insignias</p><div class="insignias-grid">'+INSIGNIAS_DEF.map(ins=>'<div class="insignia-card '+(progreso.insignias.includes(ins.id)?'desbloqueada':'')+'"><span class="ins-icono">'+ins.icono+'</span><span class="ins-nombre">'+ins.nombre+'</span></div>').join('')+'</div>'+(progreso.historial.length>0?'<p style="font-weight:800;margin:14px 0 8px">📋 Últimos textos</p>'+progreso.historial.slice(0,5).map(h=>'<div class="hist-item"><div class="hist-fecha">'+h.fecha+'</div><div>'+h.preview+'</div></div>').join(''):'')+htmlPortafolio;
   document.getElementById('panel-progreso').style.display='flex';
 }
 function cerrarProgreso(){document.getElementById('panel-progreso').style.display='none';}
@@ -644,10 +1024,121 @@ function despedirse(){
 
 function cambiarModo(modo){
   modoActual=modo;
-  ['revisar','tutor','cuentos','plantilla','leer'].forEach(m=>document.getElementById('tab-'+m).classList.toggle('activo',m===modo));
-  const ph={revisar:'Pega tu texto o sube foto…',tutor:'Escribe la frase a corregir…',cuentos:'Pídeme un cuento o di uno que conozcas…',plantilla:'Elige una plantilla arriba…',leer:'Pega el texto que quieres leer…'};
+  ['revisar','tutor','cuentos','plantilla','leer','taller'].forEach(m=>{
+    const tab=document.getElementById('tab-'+m);
+    if(tab) tab.classList.toggle('activo',m===modo);
+  });
+  const ph={revisar:'Pega tu texto o sube foto…',tutor:'Escribe la frase a corregir…',cuentos:'Pídeme un cuento o di uno que conozcas…',plantilla:'Elige una plantilla arriba…',leer:'Pega el texto que quieres leer…',taller:'Escribe tu idea o el tipo de texto que quieres crear…'};
   document.getElementById('chat-input').placeholder=ph[modo]||'…';
-  agregarBurbuja('bot',BIENVENIDAS[modo][nivelSel||'media']);
+  if(modo==='taller'){
+    mostrarTaller();
+  } else {
+    agregarBurbuja('bot',BIENVENIDAS[modo][nivelSel||'media']);
+  }
+}
+
+// ══ TALLER DE ESCRITURA — 3 fases ══
+let tallerFase=0; // 0=inicio, 1=planificación, 2=redacción, 3=revisión
+let tallerTextoAcumulado='';
+
+function mostrarTaller(){
+  tallerFase=0; tallerTextoAcumulado='';
+  const tipos={
+    elemental:['✏️ Cuento corto','📝 Descripción','💌 Carta a un amigo'],
+    media:['📰 Hoja volante','📖 Relato histórico','💌 Carta formal','🪞 Autobiografía','📋 Folleto'],
+    superior:['📰 Noticia','📝 Crónica','💬 Artículo de opinión','📚 Ensayo','🔍 Informe']
+  };
+  const nivel=nivelSel||'media';
+  const opciones=tipos[nivel]||tipos.media;
+  const html=`<div style="background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border-radius:16px;padding:16px">
+    <div style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#2E7D32;margin-bottom:8px">✍️ Taller de Escritura</div>
+    <p style="font-size:.85rem;color:var(--texto2);margin-bottom:12px;line-height:1.5">
+      Aquí vamos a escribir juntos paso a paso:<br>
+      <b>1. Planificamos</b> → <b>2. Redactamos</b> → <b>3. Revisamos</b><br>
+      <span style="font-size:.75rem;color:#2E7D32">DCD: LL.${nivel==='elemental'?'2':nivel==='media'?'3':'4'}.4.6 — Proceso de producción textual</span>
+    </p>
+    <div style="font-weight:800;font-size:.82rem;margin-bottom:8px">¿Qué tipo de texto quieres escribir hoy?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+      ${opciones.map(t=>`<button onclick="iniciarTaller('${t}')" style="background:#fff;border:2px solid #2E7D32;border-radius:10px;padding:9px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.8rem;color:#2E7D32;transition:.2s" onmouseover="this.style.background='#E8F5E9'" onmouseout="this.style.background='#fff'">${t}</button>`).join('')}
+    </div>
+  </div>`;
+  agregarBurbuja('bot',html);
+}
+
+// ══ MÓDULO LITERATURA ECUATORIANA — LOEI Art. 2z ══
+window.abrirLiteraturaEcuatoriana=function(){
+  const ctx=CONTEXTOS_INTERCULTURALES[regionEstudiante]||CONTEXTOS_INTERCULTURALES.sierra;
+  const nivel=nivelSel||'media';
+  const html=`<div style="background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border-radius:16px;padding:16px;border-left:4px solid #FF8C00">
+    <div style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--naranja);margin-bottom:6px">🇪🇨 Literatura de tu región: ${ctx.nombre} ${ctx.emoji}</div>
+    <p style="font-size:.82rem;color:var(--texto2);margin-bottom:12px;line-height:1.5">
+      Ecuador es un país plurinacional e intercultural.<br>
+      Tu región tiene una riqueza cultural única. ¡Conócela y escribe sobre ella!
+    </p>
+    ${ctx.pueblos.length>0?`<div style="margin-bottom:10px"><span style="font-size:.75rem;font-weight:800;color:var(--naranja)">🏘️ Pueblos y nacionalidades de tu región:</span><br><span style="font-size:.8rem">${ctx.pueblos.join(' · ')}</span></div>`:''}
+    ${ctx.palabrasKichwa?`<div style="background:#fff;border-radius:10px;padding:10px;margin-bottom:10px">
+      <span style="font-size:.75rem;font-weight:800;color:#1565C0">📚 Palabras Kichwa que puedes usar en tus textos:</span>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+        ${ctx.palabrasKichwa.map(p=>`<span style="background:#E3F2FD;color:#1565C0;padding:2px 8px;border-radius:20px;font-size:.75rem;font-weight:700">${p}</span>`).join('')}
+      </div>
+    </div>`:''}
+    ${ctx.palabrasShuar?`<div style="background:#fff;border-radius:10px;padding:10px;margin-bottom:10px">
+      <span style="font-size:.75rem;font-weight:800;color:#2E7D32">📚 Palabras Shuar:</span>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+        ${ctx.palabrasShuar.map(p=>`<span style="background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:20px;font-size:.75rem;font-weight:700">${p}</span>`).join('')}
+      </div>
+    </div>`:''}
+    <div style="margin-bottom:10px">
+      <span style="font-size:.75rem;font-weight:800;color:var(--verde)">📖 Leyendas y textos de tu región (para inspirarte):</span>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px">
+        ${ctx.literaturaLocal.map(l=>`<button onclick="pedirLeyenda('${l.replace(/'/g,"\\'")}','${ctx.nombre}')" style="background:#fff;border:2px solid #E0E0E0;border-radius:8px;padding:7px 10px;cursor:pointer;text-align:left;font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:700;transition:.2s;color:var(--texto)" onmouseover="this.style.borderColor='var(--naranja)'" onmouseout="this.style.borderColor='#E0E0E0'">📖 ${l}</button>`).join('')}
+      </div>
+    </div>
+    <button onclick="crearTextoIntercultural('${ctx.nombre}','${ctx.emoji}')" style="background:linear-gradient(135deg,var(--naranja),var(--naranja2));color:#fff;border:none;padding:10px 20px;border-radius:12px;cursor:pointer;font-family:'Fredoka One',cursive;font-size:.95rem;width:100%;margin-top:4px">
+      ✏️ Crear mi propio texto sobre ${ctx.nombre}
+    </button>
+  </div>`;
+  agregarBurbuja('bot',html);
+};
+
+window.pedirLeyenda=function(leyenda,region){
+  document.getElementById('chat-input').value=`Cuéntame la leyenda: "${leyenda}" de la región ${region} del Ecuador. Después ayúdame a escribir mi propia versión.`;
+  enviarMensaje();
+};
+
+window.crearTextoIntercultural=function(region,emoji){
+  const nivel=nivelSel||'media';
+  const tipos={
+    elemental:'un cuento corto con personajes de mi región',
+    media:'una descripción o relato histórico sobre mi región',
+    superior:'un artículo o crónica sobre la cultura de mi región'
+  };
+  document.getElementById('chat-input').value=`Quiero escribir ${tipos[nivel]} ${emoji}. Soy de la región ${region} del Ecuador. Ayúdame a planificarlo primero.`;
+  enviarMensaje();
+};
+
+window.iniciarTaller=function(tipoTexto){
+  tallerFase=1;
+  tallerTextoAcumulado='';
+  const msg=`Quiero escribir: ${tipoTexto}
+FASE: PLANIFICACIÓN`;
+  document.getElementById('chat-input').value=msg;
+  enviarMensaje();
+};
+
+// Indicador visual de fase del taller
+function actualizarIndicadorTaller(){
+  if(modoActual!=='taller')return;
+  const fases=['Inicio','Planificación','Redacción','Revisión'];
+  const colores=['#999','#1565C0','#FF8C00','#2E7D32'];
+  let indicador=document.getElementById('taller-indicador');
+  if(!indicador){
+    indicador=document.createElement('div');
+    indicador.id='taller-indicador';
+    indicador.style.cssText='background:#fff;border-top:2px solid #E8F5E9;padding:6px 14px;display:flex;gap:6px;align-items:center;font-size:.72rem;font-weight:800;';
+    document.getElementById('chat-footer').prepend(indicador);
+  }
+  indicador.innerHTML=fases.map((f,i)=>`<span style="padding:3px 10px;border-radius:20px;background:${i===tallerFase?colores[i]:'#F5F5F5'};color:${i===tallerFase?'#fff':'#999'}">${i===tallerFase?'▶ ':''} ${f}</span>`).join('→');
 }
 function usarPlantilla(tipo){const m={cuento:'Quiero la plantilla de CUENTO',carta:'Quiero la plantilla de CARTA',descripcion:'Quiero la plantilla de DESCRIPCIÓN',poema:'Quiero la plantilla de POEMA',noticia:'Quiero la plantilla de NOTICIA',ensayo:'Quiero la plantilla de ENSAYO',cronica:'Quiero la plantilla de CRÓNICA',resena:'Quiero la plantilla de RESEÑA',informe:'Quiero la plantilla de INFORME'};document.getElementById('chat-input').value=m[tipo]||'';enviarMensaje();}
 function agregarBurbuja(tipo,html){const body=document.getElementById('chat-body');const fila=document.createElement('div');fila.className=tipo==='bot'?'fila-bot':'fila-user';fila.innerHTML=tipo==='bot'?'<div class="av-bot">🦉</div><div class="burbuja burbuja-bot">'+html+'</div>':'<div class="burbuja burbuja-user">'+html+'</div>';body.appendChild(fila);body.scrollTop=body.scrollHeight;return fila.querySelector('.burbuja');}
@@ -656,13 +1147,31 @@ function quitarTyping(id){const t=document.getElementById('typ-'+id);if(t)t.remo
 function fmt(txt){return txt.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');}
 
 function limpiarAudio(txt){
-  return txt.replace(/<[^>]+>/g,' ').replace(/&[a-z]+;/g,' ').replace(/\*\*/g,'').replace(/\*/g,'').replace(/_/g,' ').replace(/#+/g,'')
+  return txt.replace(/<[^>]+>/g,' ')
+    .replace(/&gt;/g,' ').replace(/&lt;/g,' ').replace(/&amp;/g,' y ').replace(/&nbsp;/g,' ').replace(/&[a-zA-Z]+;/g,' ')
+    .replace(/>/g,' ').replace(/</g,' ').replace(/mayor que/gi,' ').replace(/menor que/gi,' ')
+    .replace(/\*\*/g,'').replace(/\*/g,'').replace(/_/g,' ').replace(/#+/g,'')
     .replace(/<<PAUSA_LARGA>>/gi,'... ').replace(/<<PAUSA_CORTA>>/gi,', ').replace(/<<PAUSA>>/gi,', ')
     .replace(/<<ENFASIS>>/gi,'').replace(/<<VOZ_BAJA>>/gi,'').replace(/<<FUERTE>>/gi,'').replace(/<<SUAVE>>/gi,'').replace(/<<RAPIDO>>/gi,'').replace(/<<LENTO>>/gi,'')
     .replace(/\[PAUSA LARGA\]/gi,'... ').replace(/\[PAUSA CORTA\]/gi,', ').replace(/\[PAUSA\]/gi,', ').replace(/\[ÉNFASIS\]/gi,'').replace(/\[ENFASIS\]/gi,'').replace(/\[VOZ BAJA\]/gi,'').replace(/\[FUERTE\]/gi,'').replace(/\[SUAVE\]/gi,'')
     .replace(/\[([^\]]{0,15})\]/g,'').replace(/["«»""]/g,'').replace(/<>/g,'').replace(/[|]{2,}/g,'. ').replace(/[-]{2,}/g,', ').replace(/\n/g,'. ').replace(/\s{2,}/g,' ')
     .replace(/PARTE\d+:/g,'').replace(/TEXTO ORIGINAL:/g,'Texto original.').replace(/TEXTO CORREGIDO:/g,'Texto corregido.').replace(/ERRORES:/g,'Errores.').replace(/RUBRICA_JSON[^}]+}/g,'').replace(/FORTALEZA:/g,'Muy bien.').replace(/SUGERENCIAS:/g,'Puedes mejorar.').replace(/PUNTAJE:/g,'Tu puntaje.').replace(/SOLUCION/g,'Solución.').trim();
 }
+
+let _voz=null;
+function getVoz(){
+  if(_voz)return _voz;
+  const vs=window.speechSynthesis.getVoices();if(!vs.length)return null;
+  const prio=[
+    v=>v.lang.startsWith('es')&&/paulina|monica|conchita|sabina|helena|luciana|valeria|female|woman/i.test(v.name),
+    v=>v.lang==='es-MX'||v.lang==='es-ES'||v.lang==='es-US',
+    v=>v.lang.startsWith('es'),
+  ];
+  for(const fn of prio){const v=vs.find(fn);if(v){_voz=v;return v;}}
+  return null;
+}
+if(typeof speechSynthesis!=='undefined'&&'onvoiceschanged'in speechSynthesis)
+  speechSynthesis.onvoiceschanged=()=>{_voz=null;};
 
 function hablarTexto(btn,texto){
   if(!('speechSynthesis'in window))return;
@@ -678,7 +1187,11 @@ function hablarTexto(btn,texto){
 function leerSiguienteParte(btn){
   if(audioState.pausado||audioState.parteActual>=audioState.partes.length){if(btn)btn.textContent='🔊 Escuchar';actualizarBarraAudio(audioState.btnId);audioState.parteActual=0;return;}
   const u=new SpeechSynthesisUtterance(audioState.partes[audioState.parteActual]);
-  u.lang='es-EC';u.rate=nivelSel==='elemental'?0.82:nivelSel==='media'?0.9:1.0;u.pitch=nivelSel==='elemental'?1.1:1.0;
+  const voz=getVoz();if(voz)u.voice=voz;
+  u.lang='es-EC';
+  u.rate=nivelSel==='elemental'?0.78:nivelSel==='media'?0.84:0.9;
+  u.pitch=nivelSel==='elemental'?1.2:nivelSel==='media'?1.1:1.0;
+  u.volume=1.0;
   u.onend=()=>{audioState.parteActual++;actualizarBarraAudio(audioState.btnId);if(!audioState.pausado)leerSiguienteParte(btn);};
   window.speechSynthesis.speak(u);
 }
@@ -745,14 +1258,48 @@ function pedirOtroFinal(){document.getElementById('chat-input').value='Escríbem
 
 async function consultarGroq(textoUsuario,archivo){
   const nivel=nivelSel||'media';
-  const system=(PROMPTS[modoActual]||PROMPTS.revisar)[nivel]+'\n\nNombre del estudiante: '+nombreNiño+'\nNivel: '+nivel+(progreso.institucion?'\nInstitución: '+progreso.institucion:'')+'\nErrores frecuentes del estudiante: '+JSON.stringify(progreso.erroresFrecuentes||{});
+  const _fechaHoy=new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'});
+  const perfilDUA = PERFILES_DUA[perfilAcceso]||PERFILES_DUA.ninguno;
+  const mapaC = MAPA_CURRICULAR[nivel]||MAPA_CURRICULAR.media;
+  // Errores frecuentes para práctica espaciada
+  const ef=progreso.erroresFrecuentes||{};
+  const topErr=Object.entries(ef).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k).join(', ');
+  const system=(PROMPTS[modoActual]||PROMPTS.revisar)[nivel]
+    +'\n\n=== CONTEXTO DEL ESTUDIANTE ==='
+    +'\nNombre: '+nombreNiño
+    +'\nSubnivel EGB: '+nivel+' ('+{elemental:'2°-4°',media:'5°-7°',superior:'8°-10°'}[nivel]+')'
+    +(progreso.institucion?'\nInstitución: '+progreso.institucion:'')
+    +(progreso.paralelo?'\nParalelo: '+progreso.paralelo:'')
+    +'\nDCD de referencia: '+mapaC.dcd
+    +'\nTipos de texto de su nivel: '+mapaC.textos.slice(0,3).join(', ')
+    +'\nConectores de su nivel: '+mapaC.conectores.join(', ')
+    +(topErr?'\nERRORES FRECUENTES (práctica espaciada — trabaja esto): '+topErr:'')
+    +'\n\n=== PERFIL DE ACCESIBILIDAD DUA ==='
+    +'\nPerfil activo: '+(perfilDUA.nombre||'Estándar')
+    +(perfilDUA.promptExtra?'\n'+perfilDUA.promptExtra:'')
+    +'\n\n=== NEUROEDUCACIÓN ==='
+    +'\nPrincipio clave: El aprendizaje ocurre desde la emoción. Conecta siempre con la experiencia personal del estudiante antes de enseñar. Usa la alegría, la curiosidad y el orgullo como motores de aprendizaje.'
+    +'\nContexto intercultural: Si el texto menciona Ecuador, enriquece con elementos culturales locales: '+mapaC.contextos.slice(0,2).join(', ')
+    +(()=>{
+      const ctx=CONTEXTOS_INTERCULTURALES[regionEstudiante]||CONTEXTOS_INTERCULTURALES.sierra;
+      return '\n\n=== REGIÓN DEL ESTUDIANTE: '+ctx.nombre.toUpperCase()+' '+ctx.emoji+' ==='
+        +'\nPueblos originarios de su región: '+ctx.pueblos.slice(0,3).join(', ')
+        +'\nLiteratura local para usar como referencia: '+ctx.literaturaLocal.slice(0,2).join(', ')
+        +'\nTipos de texto típicos de su región: '+ctx.textosTipicos.slice(0,2).join(', ')
+        +(ctx.palabrasKichwa?'\nPalabras kichwa que puede usar: '+ctx.palabrasKichwa.slice(0,2).join(', '):'')
+        +(ctx.palabrasShuar?'\nPalabras shuar que puede usar: '+ctx.palabrasShuar.slice(0,2).join(', '):'')
+        +'\nSi el estudiante escribe sobre su región, valora y enriquece con estos elementos culturales propios de su territorio.';
+    })()
+    +'\n\n=== SEGURIDAD ==='
+    +'\nFECHA ACTUAL HOY: '+_fechaHoy+'. Si preguntan la fecha o el año, responde con esta fecha. NUNCA menciones 2024.'
+    +'\nSolo responde sobre escritura, lectura, ortografía, gramática y literatura. Si el tema es inapropiado sin contexto educativo, redirige amablemente a la escritura.';
   const mensajes=[{role:'system',content:system}];
   historial.forEach(h=>mensajes.push({role:h.role==='model'?'assistant':'user',content:h.content||''}));
   let contenido;
   if(archivo){const b64=await leerBase64(archivo);contenido=[{type:'text',text:textoUsuario||'Revisa esta imagen'},{type:'image_url',image_url:{url:'data:'+archivo.type+';base64,'+b64}}];}
   else{contenido=textoUsuario||'(sin texto)';}
   mensajes.push({role:'user',content:contenido});
-  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',messages:mensajes,temperature:0.7,max_tokens:1400})});
+  const resp=await fetch(GROQ_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',messages:mensajes,temperature:0.7,max_tokens:1400})});
   if(!resp.ok){const e=await resp.json().catch(()=>({}));if(resp.status===429)throw new Error('⏳ Espera 10 segundos.');if(resp.status===401)throw new Error('🔑 API key incorrecta.');throw new Error('Error '+resp.status);}
   const data=await resp.json();
   const tx=data.choices?.[0]?.message?.content;
@@ -762,10 +1309,45 @@ async function consultarGroq(textoUsuario,archivo){
   return tx;
 }
 
+const PALABRAS_INAPROPIADAS=['porno','cocain','marihuan','fuck','shit','mierda','puta','puto','nazi','terroris','desnud'];
+// Señales de alerta social — NO bloquear, responder con empatía y notificar docente
+const ALERTAS_SOCIALES=['me pegan','me golpean','me lastiman','tengo miedo','nadie me quiere','quiero morirme','me odio','me hacen daño','no quiero vivir','me abusan','me tocan','me gritan','estoy solo','me ignoran','me bullyng','me hacen bullying','me amenazan'];
+
+function esContenidoInapropiado(t){
+  const n=t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return PALABRAS_INAPROPIADAS.some(p=>n.includes(p));
+}
+function esAlertaSocial(t){
+  const n=t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return ALERTAS_SOCIALES.some(a=>n.includes(a));
+}
+// Determinar si el tema es educativo aunque contenga palabras sensibles
+function esContextoEducativo(t){
+  const n=t.toLowerCase();
+  const contextosOK=['guerra de independencia','historia','bullying en mi cuento','violencia en la historia','maltrato animal','tema de violencia','personaje malo','villano','conflicto','problema en mi texto'];
+  return contextosOK.some(ctx=>n.includes(ctx));
+}
+
 async function enviarMensaje(){
   const inputEl=document.getElementById('chat-input');const fileEl=document.getElementById('chat-file');
   const texto=inputEl.value.trim();const archivo=fileEl.files[0];
   if(!texto&&!archivo)return;
+  // Alerta social — responder con empatía Y notificar docente
+  if(texto && esAlertaSocial(texto)){
+    agregarBurbuja('user',texto);inputEl.value='';inputEl.style.height='auto';
+    agregarBurbuja('bot','🦉 Gracias por contarme esto. Lo que sientes es muy importante. '+
+      '<br><br>¿Puedes hablarle a un adulto de confianza — tu profe, papá, mamá o alguien en tu escuela? Ellos pueden ayudarte mucho mejor que yo.'+
+      '<br><br>Estoy aquí si quieres escribir sobre cómo te sientes. A veces escribirlo ayuda. 💙');
+    // Notificar silenciosamente al docente
+    if(typeof window.fbAlertaSocial==='function') window.fbAlertaSocial(texto);
+    return;
+  }
+  // Filtro contenido inapropiado sin contexto educativo
+  if(texto && esContenidoInapropiado(texto) && !esContextoEducativo(texto)){
+    agregarBurbuja('user',texto);inputEl.value='';inputEl.style.height='auto';
+    agregarBurbuja('bot','🦉 Ese tema no es parte de nuestra clase de escritura. Aquí aprendemos sobre cuentos, poemas, cartas y textos. ¿Te ayudo con tu escritura hoy?');
+    return;
+  }
   document.getElementById('btn-enviar').disabled=true;
   let htmlUser=texto?fmt(texto):'';
   if(archivo)htmlUser+=(htmlUser?'<br>':'')+'<small>📷 '+archivo.name+'</small>';
@@ -788,7 +1370,15 @@ function leerBase64(a){return new Promise((r,j)=>{const rd=new FileReader();rd.o
 function toggleFuente(){fuenteGrande=!fuenteGrande;document.body.classList.toggle('fuente-grande',fuenteGrande);}
 
 // ══ TEMPORIZADOR DESCANSO ══
-function iniciarTemporizador(){intervaloTiempo=setInterval(()=>{tiempoActivo++;const lim=20*60+Math.floor(Math.random()*10*60);if(tiempoActivo>=lim&&!alertaMostrada){alertaMostrada=true;mostrarAlertaDescanso();}},1000);}
+function iniciarTemporizador(){
+  intervaloTiempo=setInterval(()=>{
+    tiempoActivo++;
+    const perfil=PERFILES_DUA[perfilAcceso];
+    const base = (window._limiteDescanso)||(perfil?perfil.timerDescanso:20*60);
+    const lim = base + Math.floor(Math.random()*3*60);
+    if(tiempoActivo>=lim&&!alertaMostrada){alertaMostrada=true;mostrarAlertaDescanso();}
+  },1000);
+}
 function mostrarAlertaDescanso(){document.getElementById('alerta-descanso').style.display='flex';}
 function cerrarAlertaDescanso(){document.getElementById('alerta-descanso').style.display='none';tiempoActivo=0;alertaMostrada=false;}
 function irAJuegos(){cerrarAlertaDescanso();abrirJuegos();}
@@ -923,9 +1513,11 @@ try{fbApp=initializeApp(FB_CFG,'buho-student');db=getFirestore(fbApp);}catch(e){
 window.fbVerificarCodigo=async(codigo)=>{if(!db)return null;try{const q=query(collection(db,'tareas'),where('codigo','==',codigo),where('activa','==',true));const s=await getDocs(q);return s.empty?null:{id:s.docs[0].id,...s.docs[0].data()};}catch(e){return null;}};
 
 window.fbRegistrarSesion=async(nombre,nivel,tareaId,docenteId,institucion,paralelo)=>{
+  // Guardar también la región para análisis intercultural
+  const region=regionEstudiante||'sierra';
   if(!db)return;
   try{
-    const ref=await addDoc(collection(db,'sesiones'),{nombreEstudiante:nombre,nivel,tareaId:tareaId||'Libre',docenteId:docenteId||'libre',institucion:institucion||'',paralelo:paralelo||'',inicio:serverTimestamp(),activo:true,textosRevisados:0,erroresCorregidos:0,cuentosCreados:0,juegosJugados:0,duracionMinutos:0,msgsDocente:[],msgsEstudiante:[]});
+    const ref=await addDoc(collection(db,'sesiones'),{nombreEstudiante:nombre,nivel,tareaId:tareaId||'Libre',docenteId:docenteId||'libre',institucion:institucion||'',paralelo:paralelo||'',region:region,inicio:serverTimestamp(),activo:true,textosRevisados:0,erroresCorregidos:0,cuentosCreados:0,juegosJugados:0,duracionMinutos:0,msgsDocente:[],msgsEstudiante:[]});
     sesionRef=doc(db,'sesiones',ref.id);sesionId=ref.id;
     // Actualizar duración cada 2 min
     setInterval(async()=>{const m=Math.round((Date.now()-Date.now())/60000);try{await updateDoc(sesionRef,{duracionMinutos:m});}catch(e){}},120000);
@@ -943,6 +1535,28 @@ window.fbRegistrarSesion=async(nombre,nivel,tareaId,docenteId,institucion,parale
 };
 
 window.fbActualizarProgreso=async(datos)=>{if(!sesionRef)return;try{await updateDoc(sesionRef,datos);}catch(e){}};
+
+// Guardar producción en portafolio Firebase
+window.fbGuardarPortafolio=async(entrada)=>{
+  if(!sesionRef||!db)return;
+  try{
+    const{updateDoc,arrayUnion}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await updateDoc(sesionRef,{portafolio:arrayUnion(entrada)});
+  }catch(e){console.log('Error portafolio Firebase:',e);}
+};
+
+// Alerta social — notifica al docente silenciosamente
+window.fbAlertaSocial=async(texto)=>{
+  if(!sesionRef||!db)return;
+  try{
+    const{updateDoc,arrayUnion}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const hora=new Date().toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'});
+    await updateDoc(sesionRef,{
+      alertasSociales:arrayUnion({texto,hora,fecha:new Date().toLocaleDateString('es-EC'),ts:Date.now()}),
+      tieneAlertaSocial:true
+    });
+  }catch(e){console.log('Error alerta social:',e);}
+};
 
 window.fbEnviarMsgEstudiante=async(texto)=>{
   if(!db||!sesionId)return;
