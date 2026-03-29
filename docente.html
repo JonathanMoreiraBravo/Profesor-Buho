@@ -54,6 +54,7 @@ tbody td{padding:10px 12px;vertical-align:middle;}
 .badge-desconectado{background:#F5F5F5;color:#999;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700;}
 .badge-activo::before{content:'';display:inline-block;width:6px;height:6px;background:var(--verde);border-radius:50%;animation:pulso 1.5s infinite;}
 @keyframes pulso{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes pulsoBorde{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,0.4)}50%{box-shadow:0 0 0 6px rgba(198,40,40,0)}}
 .progreso-mini{height:5px;background:#E0E0E0;border-radius:3px;overflow:hidden;min-width:70px;}
 .progreso-fill{height:100%;background:linear-gradient(90deg,var(--naranja),var(--naranja2));border-radius:3px;}
 .avatar-letra{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--naranja),var(--naranja2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.88rem;flex-shrink:0;}
@@ -126,7 +127,29 @@ tbody td{padding:10px 12px;vertical-align:middle;}
 .notif{display:none;position:fixed;top:16px;right:16px;background:var(--verde);color:#fff;padding:11px 18px;border-radius:12px;font-weight:700;z-index:500;box-shadow:0 4px 14px rgba(0,0,0,.2);font-size:.88rem;}
 .loader-row td{text-align:center;padding:26px;color:var(--texto2);font-size:.88rem;}
 .badge-msg-doc{background:var(--rojo);color:#fff;border-radius:50%;width:16px;height:16px;font-size:.65rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-left:3px;}
+/* MÓDULO ANÁLISIS IA */
+.modulo-ia{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--radio);padding:20px;margin-bottom:16px;color:#fff;border:2px solid rgba(255,140,0,.3);}
+.modulo-ia h2{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#FF8C00;margin-bottom:6px;}
+.modulo-ia p{font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:14px;}
+.zona-drop{border:3px dashed rgba(255,140,0,.4);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,.05);margin-bottom:12px;}
+.zona-drop:hover{border-color:var(--naranja);background:rgba(255,140,0,.1);}
+.zona-drop.drag-over{border-color:#00E676;background:rgba(0,230,118,.1);}
+.pdf-lista{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-bottom:12px;}
+.pdf-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:8px;padding:7px 11px;font-size:.78rem;}
+.pdf-item .pdf-nom{flex:1;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pdf-item .pdf-est{font-size:.68rem;padding:2px 7px;border-radius:10px;font-weight:700;}
+.pdf-est.leyendo{background:#FFF3E0;color:#E65100;}
+.pdf-est.listo{background:#E8F5E9;color:#2E7D32;}
+.pdf-est.error{background:#FFEBEE;color:#C62828;}
+.btn-analizar{background:linear-gradient(135deg,#FF8C00,#E65000);color:#fff;border:none;padding:12px 28px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.92rem;cursor:pointer;width:100%;transition:.2s;margin-top:4px;}
+.btn-analizar:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,140,0,.4);}
+.btn-analizar:disabled{background:#555;cursor:default;}
+.ia-progreso{background:rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-top:10px;font-size:.8rem;color:rgba(255,255,255,.8);display:none;}
+.ia-barra-wrap{background:rgba(255,255,255,.15);border-radius:4px;height:6px;margin-top:6px;}
+.ia-barra{height:100%;background:linear-gradient(90deg,var(--naranja),#FFD600);border-radius:4px;transition:width .5s;}
+
 @media(max-width:600px){.form-grid{grid-template-columns:1fr;}.stats-grid{grid-template-columns:1fr 1fr;}.analisis-grid{grid-template-columns:1fr;}.rubrica-docente{grid-template-columns:1fr 1fr;}}
+</style>
 </style>
 </head>
 <body>
@@ -151,7 +174,7 @@ tbody td{padding:10px 12px;vertical-align:middle;}
     <div><h1>📊 Panel Docente — Profesor Búho</h1><div class="header-info" id="hdr-info">Cargando...</div></div>
     <div>
       <button class="btn-hdr" onclick="exportarCSV()">📥 CSV</button>
-      <button class="btn-hdr" onclick="exportarPDF()">📄 Reporte PDF</button>
+      <button class="btn-hdr" onclick="abrirModalReporte()">📄 Reporte PDF</button>
       <button class="btn-hdr" onclick="cerrarSesionDocente()">Salir</button>
     </div>
   </div>
@@ -162,6 +185,42 @@ tbody td{padding:10px 12px;vertical-align:middle;}
       <div class="stat-card naranja"><span class="stat-num" id="st-total">0</span><span class="stat-label">Total hoy</span></div>
       <div class="stat-card azul"><span class="stat-num" id="st-textos">0</span><span class="stat-label">Textos revisados</span></div>
       <div class="stat-card rojo"><span class="stat-num" id="st-tiempo">0m</span><span class="stat-label">Tiempo promedio</span></div>
+      <div class="stat-card" style="cursor:pointer;border:2px solid transparent" id="st-alertas-card" onclick="document.getElementById('seccion-alertas').scrollIntoView({behavior:'smooth'})"><span class="stat-num" id="st-alertas" style="color:#C62828">0</span><span class="stat-label">⚠️ Alertas sociales</span></div>
+      <div class="stat-card" style="border:2px solid var(--morado-cl)"><span class="stat-num" id="st-juegos" style="color:var(--morado)">0</span><span class="stat-label">🎮 Juegos jugados</span></div>
+    </div>
+
+    <!-- MÓDULO ANÁLISIS DE CURSO CON IA -->
+    <div class="modulo-ia">
+      <h2>🧠 Análisis de Curso con IA</h2>
+      <p>Sube hasta 40 reportes PDF de sus estudiantes y la IA generará un análisis psicopedagógico completo: individual, grupal, DUA, para padres de familia y para rectorado/DECE/UDAI.</p>
+      <div class="zona-drop" id="zona-drop" onclick="document.getElementById('input-pdfs').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropPDFs(event)">
+        <div style="font-size:2rem;margin-bottom:6px">📂</div>
+        <div style="font-weight:800;font-size:.88rem">Arrastra PDFs aquí o haz clic para seleccionar</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.6);margin-top:4px">Máximo 40 archivos PDF · Los reportes de Profesor Búho o cualquier reporte escolar</div>
+      </div>
+      <input type="file" id="input-pdfs" multiple accept=".pdf" style="display:none" onchange="seleccionarPDFs(this.files)">
+      <div class="pdf-lista" id="pdf-lista" style="display:none"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn-analizar" id="btn-analizar" disabled onclick="analizarCursoIA()">🧠 Analizar Curso con IA</button>
+        <button style="background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);color:#fff;padding:10px 16px;border-radius:12px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem" onclick="limpiarPDFs()">🗑️ Limpiar</button>
+      </div>
+      <div class="ia-progreso" id="ia-progreso">
+        <div id="ia-progreso-txt">Preparando análisis...</div>
+        <div class="ia-barra-wrap"><div class="ia-barra" id="ia-barra" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- ALERTAS SOCIALES — PANEL PRIORITARIO -->
+    <div class="seccion" id="seccion-alertas" style="display:none;border-left:5px solid #C62828;">
+      <div class="seccion-titulo" style="color:#C62828">⚠️ Alertas sociales — Requieren atención inmediata</div>
+      <div style="font-size:.8rem;color:var(--texto2);margin-bottom:10px">Estos estudiantes expresaron algo preocupante durante la sesión. Acércate a ellos.</div>
+      <div id="alertas-lista"></div>
+    </div>
+
+    <!-- PERFILES DUA -->
+    <div class="seccion" id="seccion-dua" style="display:none">
+      <div class="seccion-titulo">🧠 Distribución por perfil DUA</div>
+      <div id="dua-grid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
     </div>
 
     <!-- COMPETENCIAS GRUPO -->
@@ -195,12 +254,13 @@ tbody td{padding:10px 12px;vertical-align:middle;}
       <div class="filtros">
         <select class="filtro-select" id="filtro-tarea" onchange="filtrarTabla()"><option value="">Todas las tareas</option></select>
         <select class="filtro-select" id="filtro-estado" onchange="filtrarTabla()"><option value="">Todos</option><option value="conectado">Conectados</option><option value="completado">Completaron</option></select>
+        <select class="filtro-select" id="filtro-dua" onchange="filtrarTabla()"><option value="">Todos los perfiles</option><option value="dislexia">Dislexia</option><option value="tdah">TDAH</option><option value="tea">TEA</option><option value="sordomudo">Sordomudo</option><option value="di">DI Leve</option><option value="tipico">Típico</option></select>
         <button class="btn-actualizar" onclick="cargarSesiones()">🔄 Actualizar</button>
         <button class="btn-actualizar" style="background:var(--naranja-cl);color:var(--naranja)" onclick="exportarCSV()">📥 CSV</button>
       </div>
       <div class="tabla-wrap">
         <table>
-          <thead><tr><th>Estudiante</th><th>Estado</th><th>Institución</th><th>Tarea</th><th>Tiempo</th><th>Textos</th><th>Rúbrica</th><th>Progreso</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Estudiante</th><th>Estado</th><th>Perfil DUA</th><th>Institución</th><th>Tarea</th><th>Tiempo</th><th>Textos</th><th>Rúbrica</th><th>Progreso</th><th>Acciones</th></tr></thead>
           <tbody id="tabla-body"><tr class="loader-row"><td colspan="9">⏳ Cargando datos...</td></tr></tbody>
         </table>
       </div>
@@ -211,6 +271,21 @@ tbody td{padding:10px 12px;vertical-align:middle;}
       <div class="seccion-titulo">📈 Análisis cuantitativo y cualitativo</div>
       <div id="analisis-contenido" style="color:var(--texto2);font-size:.88rem">Crea una tarea y espera que los estudiantes se conecten.</div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL REPORTE PDF DENTRO DEL PANEL -->
+<div id="modal-reporte" onclick="cerrarModalReporte(event)">
+  <div class="reporte-modal-inner">
+    <div class="reporte-modal-header">
+      <h2>📄 Informe Pedagógico — Profesor Búho</h2>
+      <div class="reporte-acciones">
+        <button class="btn-reporte-accion" onclick="imprimirReporte()">🖨️ Imprimir</button>
+        <button class="btn-reporte-accion" onclick="descargarReportePDF()">⬇️ Descargar PDF</button>
+        <button class="btn-reporte-accion" onclick="cerrarModalReporte()" style="background:rgba(255,255,255,.1)">✖ Cerrar</button>
+      </div>
+    </div>
+    <div id="reporte-contenido"></div>
   </div>
 </div>
 
@@ -260,6 +335,8 @@ window.loginDocente=function(){
   const p=document.getElementById('panel');p.style.display='flex';p.style.flexDirection='column';
   document.getElementById('hdr-info').textContent=nombre+' · '+curso+(inst?' · '+inst:'');
   cargarSesiones();cargarTareas();escucharTiempoReal();
+  // Auto-refresh cada 30 segundos
+  setInterval(()=>cargarSesiones(),30000);
 };
 
 window.crearTarea=async function(){
@@ -284,7 +361,7 @@ window.cargarSesiones=async function(){
     const snap=await getDocs(q);
     todasSesiones=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderizarTabla(todasSesiones);actualizarStats(todasSesiones);actualizarAnalisis(todasSesiones);actualizarCompetencias(todasSesiones);
-  }catch(e){document.getElementById('tabla-body').innerHTML='<tr class="loader-row"><td colspan="9">Error: '+e.message+'</td></tr>';}
+  }catch(e){document.getElementById('tabla-body').innerHTML='<tr class="loader-row"><td colspan="10">Error: '+e.message+'</td></tr>';}
 };
 
 function escucharTiempoReal(){
@@ -293,15 +370,25 @@ function escucharTiempoReal(){
   unsubscribe=onSnapshot(q,snap=>{
     todasSesiones=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderizarTabla(todasSesiones);actualizarStats(todasSesiones);actualizarAnalisis(todasSesiones);actualizarCompetencias(todasSesiones);
-    // Escuchar mensajes de conectados
-    todasSesiones.filter(s=>s.activo).forEach(s=>escucharMsgsEst(s.id,s.nombreEstudiante));
+    // Escuchar mensajes de conectados y recientes
+    todasSesiones.filter(s=>estadoReal(s)!=='desconectado').forEach(s=>escucharMsgsEst(s.id,s.nombreEstudiante));
   });
 }
 
 async function cargarTareas(){const q=query(collection(db,'tareas'),where('docenteId','==',docenteId));const snap=await getDocs(q);snap.docs.forEach(d=>actualizarSelectTareas(d.data().codigo,d.data().titulo));}
 function actualizarSelectTareas(cod,tit){const sel=document.getElementById('filtro-tarea');if(!Array.from(sel.options).some(o=>o.value===cod)){const opt=document.createElement('option');opt.value=cod;opt.textContent=cod+' — '+tit;sel.appendChild(opt);}}
 
-function calcDur(s){if(s.duracionMinutos>0)return s.duracionMinutos;if(s.activo&&s.inicio)return Math.floor((Date.now()-s.inicio.seconds*1000)/60000);return 0;}
+function calcDur(s){if(s.duracionMinutos>0)return s.duracionMinutos;if(s.inicio){const mins=Math.floor((Date.now()-s.inicio.seconds*1000)/60000);return mins>0?mins:0;}return 0;}
+
+// Determinar estado real — un estudiante está "activo" si entró hace menos de 90 min y no marcó fin
+function estadoReal(s){
+  if(s.activo)return 'conectado';
+  if(s.fin)return 'desconectado';
+  // Sin campo fin — probablemente sigue activo (cerró sin guardar)
+  const mins=calcDur(s);
+  if(mins<90)return 'reciente';
+  return 'desconectado';
+}
 
 // ══ RÚBRICA EN TABLA ══
 function renderRubricaMini(rubrica){
@@ -314,11 +401,15 @@ function renderRubricaMini(rubrica){
 function renderizarTabla(ses){
   const ft=document.getElementById('filtro-tarea').value;
   const fe=document.getElementById('filtro-estado').value;
+  const fd=document.getElementById('filtro-dua').value;
   let lista=ses;
   if(ft)lista=lista.filter(s=>s.tareaId===ft);
   if(fe==='conectado')lista=lista.filter(s=>s.activo);
   if(fe==='completado')lista=lista.filter(s=>!s.activo&&(s.textosRevisados||0)>0);
-  if(lista.length===0){document.getElementById('tabla-body').innerHTML='<tr class="loader-row"><td colspan="9">No hay estudiantes aún.</td></tr>';return;}
+  if(fd)lista=lista.filter(s=>(s.perfil||'tipico').toLowerCase().includes(fd));
+  if(lista.length===0){document.getElementById('tabla-body').innerHTML='<tr class="loader-row"><td colspan="10">No hay estudiantes aún.</td></tr>';return;}
+  const DUA_BADGE={dislexia:'<span style="background:#E3F2FD;color:#1565C0;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:800">📖 Dislexia</span>',tdah:'<span style="background:#FFF9C4;color:#F57F17;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:800">⚡ TDAH</span>',tea:'<span style="background:#F3E5F5;color:#6A1B9A;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:800">🧩 TEA</span>',sordomudo:'<span style="background:#E8F5E9;color:#2E7D32;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:800">🤟 Sordomudo</span>',di:'<span style="background:#FBE9E7;color:#BF360C;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:800">💡 DI Leve</span>',tipico:'<span style="background:#F5F5F5;color:#666;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:700">👤 Típico</span>'};
+  const REGION_EMOJI={sierra:'🏔️ Sierra',costa:'🌊 Costa',amazonia:'🌿 Amazonía',galapagos:'🐢 Galápagos'};
   const html=lista.map(s=>{
     const dur=calcDur(s);
     const prog=Math.min(100,Math.round(((s.textosRevisados||0)+(s.erroresCorregidos||0)+(s.cuentosCreados||0))/3*33));
@@ -330,9 +421,19 @@ function renderizarTabla(ses){
     const noLeidos=msgsEst-msgsVisto;
     const badgeMsg=noLeidos>0?`<span class="badge-msg-doc">${noLeidos}</span>`:'';
     const rubrica=s.ultimaRubrica||{};
+    const alertaSocial=s.tieneAlertaSocial?'<span style="background:#C62828;color:#fff;border-radius:20px;padding:2px 7px;font-size:.68rem;font-weight:800;margin-left:4px">⚠️ ALERTA</span>':'';
+    const perfilKey=(s.perfil||'tipico').toLowerCase().replace(/[^a-z]/g,'');
+    const duaBadge=DUA_BADGE[perfilKey]||DUA_BADGE.tipico;
+    const estado=estadoReal(s);
+    const badgeEstado=estado==='conectado'
+      ?'<span class="badge-conectado"><span class="badge-activo"></span>Conectado</span>'
+      :estado==='reciente'
+      ?'<span style="background:#FFF9C4;color:#F57F17;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:800">⏱️ Reciente</span>'
+      :'<span class="badge-desconectado">Desconectado</span>';
     return`<tr>
-      <td><div class="nombre-cell"><div class="avatar-letra">${letra}</div><div><div style="font-weight:800">${s.nombreEstudiante||'Desconocido'}</div><div style="font-size:.68rem;color:var(--texto2)">${ini} ${s.paralelo?'· '+s.paralelo:''}</div></div></div></td>
-      <td>${s.activo?'<span class="badge-conectado"><span class="badge-activo"></span>Conectado</span>':'<span class="badge-desconectado">Desconectado</span>'}</td>
+      <td><div class="nombre-cell"><div class="avatar-letra" style="${s.tieneAlertaSocial?'background:#C62828':''}">${letra}</div><div><div style="font-weight:800">${s.nombreEstudiante||'Desconocido'}${alertaSocial}</div><div style="font-size:.68rem;color:var(--texto2)">${ini} ${s.paralelo?'· '+s.paralelo:''}</div></div></div></td>
+      <td>${badgeEstado}</td>
+      <td>${duaBadge}</td>
       <td style="font-size:.75rem;color:var(--texto2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.institucion||'—'}</td>
       <td style="font-size:.78rem">${s.tareaId||'Libre'}</td>
       <td style="font-weight:700" class="${tAlerta}">${dur}m${dur>90?' ⚠️':''}</td>
@@ -341,8 +442,8 @@ function renderizarTabla(ses){
       <td><div class="progreso-mini"><div class="progreso-fill" style="width:${prog}%"></div></div></td>
       <td style="white-space:nowrap">
         <button class="btn-accion btn-ver" onclick="verDetalle('${s.id}')">👁 Ver</button>
-        <button class="btn-accion btn-chat" onclick="abrirChatDoc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${s.activo})">💬${badgeMsg}</button>
-        <button class="btn-accion btn-desconectar" onclick="pedirDesc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${dur})" ${!s.activo?'disabled':''}>⏹</button>
+        <button class="btn-accion btn-chat" onclick="abrirChatDoc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${s.activo||estado==='reciente'})">💬${badgeMsg}</button>
+        <button class="btn-accion btn-desconectar" onclick="pedirDesc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${dur})" ${estado==='desconectado'?'disabled':''}>⏹</button>
       </td>
     </tr>`;
   }).join('');
@@ -352,14 +453,66 @@ function renderizarTabla(ses){
 function actualizarStats(ses){
   const hoy=new Date().toDateString();
   const hoyS=ses.filter(s=>s.inicio&&new Date(s.inicio.seconds*1000).toDateString()===hoy);
-  const con=ses.filter(s=>s.activo).length;
+  const con=ses.filter(s=>estadoReal(s)!=='desconectado').length;
   const totalTx=ses.reduce((a,s)=>a+(s.textosRevisados||0),0);
   const tms=ses.map(s=>calcDur(s)).filter(t=>t>0);
   const prom=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  const alertas=ses.filter(s=>s.tieneAlertaSocial).length;
+  const juegos=ses.reduce((a,s)=>a+(s.juegosJugados||0),0);
   document.getElementById('st-conectados').textContent=con;
   document.getElementById('st-total').textContent=hoyS.length;
   document.getElementById('st-textos').textContent=totalTx;
   document.getElementById('st-tiempo').textContent=prom+'m';
+  document.getElementById('st-alertas').textContent=alertas;
+  document.getElementById('st-juegos').textContent=juegos;
+  // Resaltar tarjeta de alertas si hay
+  const cardAl=document.getElementById('st-alertas-card');
+  if(alertas>0){cardAl.style.border='2px solid #C62828';cardAl.style.background='#FFEBEE';cardAl.style.animation='pulsoBorde 1.5s infinite';}
+  else{cardAl.style.border='2px solid transparent';cardAl.style.background='';cardAl.style.animation='';}
+  // Panel alertas
+  actualizarPanelAlertas(ses);
+  // Perfiles DUA
+  actualizarDUA(ses);
+}
+
+function actualizarPanelAlertas(ses){
+  const conAlertas=ses.filter(s=>s.tieneAlertaSocial&&(s.alertasSociales||[]).length>0);
+  const seccion=document.getElementById('seccion-alertas');
+  if(conAlertas.length===0){seccion.style.display='none';return;}
+  seccion.style.display='block';
+  const lista=document.getElementById('alertas-lista');
+  lista.innerHTML=conAlertas.map(s=>{
+    const alertas=s.alertasSociales||[];
+    return`<div style="background:#fff;border:2px solid #C62828;border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <b style="color:#C62828">⚠️ ${s.nombreEstudiante||'Estudiante'}</b>
+        <div>
+          <button class="btn-accion btn-chat" onclick="abrirChatDoc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${s.activo})" style="font-size:.75rem">💬 Contactar</button>
+          <button class="btn-accion btn-ver" onclick="verDetalle('${s.id}')" style="font-size:.75rem">👁 Ver perfil</button>
+        </div>
+      </div>
+      ${alertas.map(a=>`<div style="background:#FFEBEE;border-radius:8px;padding:7px 10px;margin-bottom:4px;font-size:.82rem"><span style="color:#C62828;font-weight:700">${a.hora||''}</span> — ${a.texto}</div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function actualizarDUA(ses){
+  if(ses.length===0){document.getElementById('seccion-dua').style.display='none';return;}
+  const conteo={dislexia:0,tdah:0,tea:0,sordomudo:0,di:0,tipico:0};
+  ses.forEach(s=>{const p=(s.perfil||'tipico').toLowerCase().replace(/[^a-z]/g,'');if(conteo[p]!==undefined)conteo[p]++;else conteo.tipico++;});
+  const total=ses.length;
+  if(total===0)return;
+  document.getElementById('seccion-dua').style.display='block';
+  const CONF={dislexia:{emoji:'📖',color:'#1565C0',bg:'#E3F2FD',label:'Dislexia'},tdah:{emoji:'⚡',color:'#F57F17',bg:'#FFF9C4',label:'TDAH'},tea:{emoji:'🧩',color:'#6A1B9A',bg:'#F3E5F5',label:'TEA'},sordomudo:{emoji:'🤟',color:'#2E7D32',bg:'#E8F5E9',label:'Sordomudo'},di:{emoji:'💡',color:'#BF360C',bg:'#FBE9E7',label:'DI Leve'},tipico:{emoji:'👤',color:'#555',bg:'#F5F5F5',label:'Típico'}};
+  document.getElementById('dua-grid').innerHTML=Object.entries(conteo).filter(([,n])=>n>0).map(([k,n])=>{
+    const c=CONF[k];const pct=Math.round((n/total)*100);
+    return`<div style="background:${c.bg};border:2px solid ${c.color}20;border-radius:12px;padding:10px 14px;min-width:100px;text-align:center">
+      <div style="font-size:1.4rem">${c.emoji}</div>
+      <div style="font-weight:800;color:${c.color};font-size:1.1rem">${n}</div>
+      <div style="font-size:.72rem;color:${c.color};font-weight:700">${c.label}</div>
+      <div style="font-size:.65rem;color:#999">${pct}% del grupo</div>
+    </div>`;
+  }).join('');
 }
 
 // ══ COMPETENCIAS DEL GRUPO ══
@@ -382,6 +535,61 @@ function actualizarCompetencias(ses){
 }
 
 // ══ ANÁLISIS MEJORADO ══
+// ══ ANÁLISIS NEUROEDUCATIVO — estilo psicólogo educativo ══
+function generarAnalisisNeuro(ses){
+  if(!ses||ses.length===0) return '';
+  const total=ses.length;
+  const conectados=ses.filter(s=>s.activo).length;
+  const completaron=ses.filter(s=>(s.textosRevisados||0)>0).length;
+  const tms=ses.map(s=>calcDur(s)).filter(t=>t>0);
+  const promT=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  const totalTx=ses.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  // Patrones neuroeducativos
+  const evitadores=ses.filter(s=>calcDur(s)>15&&(s.textosRevisados||0)===0);
+  const rapidos=ses.filter(s=>calcDur(s)<5&&(s.textosRevisados||0)>0);
+  const constantes=ses.filter(s=>(s.textosRevisados||0)>=3);
+  const conAlerta=ses.filter(s=>s.tieneAlertaSocial);
+  let analisis='<div style="background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border-radius:14px;padding:16px;margin-bottom:12px">';
+  analisis+='<div style="font-weight:800;color:#2E7D32;font-size:.9rem;margin-bottom:10px">🧠 Análisis Neuroeducativo del grupo</div>';
+  // Alertas sociales — prioridad absoluta
+  if(conAlerta.length>0){
+    analisis+=`<div style="background:#FFEBEE;border-left:4px solid #C62828;border-radius:0 8px 8px 0;padding:10px;margin-bottom:10px">
+      <b style="color:#C62828">⚠️ ATENCIÓN PRIORITARIA — Alerta socioemocional</b><br>
+      <span style="font-size:.82rem">${conAlerta.map(s=>s.nombreEstudiante).join(', ')} han enviado señales de alerta. 
+      Se recomienda conversación individual antes de la próxima clase. Contacta al DECE si es necesario.</span>
+    </div>`;
+  }
+  // Patrón de evitación
+  if(evitadores.length>0){
+    const pct=Math.round((evitadores.length/total)*100);
+    analisis+=`<div style="background:#FFF3E0;border-left:4px solid #FF8C00;border-radius:0 8px 8px 0;padding:10px;margin-bottom:8px">
+      <b style="color:#E65100">📊 Patrón de evitación detectado (${pct}% del grupo)</b><br>
+      <span style="font-size:.82rem"><b>Estudiantes:</b> ${evitadores.map(s=>s.nombreEstudiante).join(', ')}<br>
+      <b>Interpretación neuroeducativa:</b> La evitación de la escritura puede indicar ansiedad ante la tarea escrita, posible NEE no diagnosticada, o dificultad con las instrucciones. 
+      <b>Recomendación:</b> Reducir la exigencia inicial, ofrecer andamiaje (comenzar con una sola oración) y verificar si existe barrera de acceso (dispositivo, conexión o comprensión de la tarea).</span>
+    </div>`;
+  }
+  // Alta motivación intrínseca
+  if(constantes.length>0){
+    analisis+=`<div style="background:#E8F5E9;border-left:4px solid #2E7D32;border-radius:0 8px 8px 0;padding:10px;margin-bottom:8px">
+      <b style="color:#2E7D32">🌟 Alta motivación intrínseca (${constantes.length} estudiantes)</b><br>
+      <span style="font-size:.82rem"><b>Estudiantes:</b> ${constantes.map(s=>s.nombreEstudiante).join(', ')}<br>
+      <b>Neuroeducación:</b> Están en estado de flujo (flow). Dales desafíos adicionales para mantener el estado óptimo de aprendizaje. Evita interrumpirlos innecesariamente.</span>
+    </div>`;
+  }
+  // Tiempo promedio
+  const nivelEngage = promT>=20?'alto':promT>=10?'medio':'bajo';
+  const colorEngage = promT>=20?'#2E7D32':promT>=10?'#FF8C00':'#C62828';
+  analisis+=`<div style="font-size:.82rem;padding:8px 0">
+    <b>⏱️ Compromiso temporal:</b> Promedio ${promT} min — Nivel <b style="color:${colorEngage}">${nivelEngage}</b><br>
+    ${promT>=20?'El grupo demuestra alta perseverancia cognitiva. La actividad generó suficiente desafío para mantener la atención.':
+    promT>=10?'Tiempo aceptable. Considera aumentar la complejidad del reto de escritura para generar mayor compromiso.':
+    'Tiempo muy bajo. Posible desmotivación o dificultad con la tarea. Revisa las instrucciones y el nivel de dificultad.'}
+  </div>`;
+  analisis+='</div>';
+  return analisis;
+}
+
 function actualizarAnalisis(ses){
   if(ses.length===0)return;
   const total=ses.length;
@@ -412,7 +620,8 @@ function actualizarAnalisis(ses){
   if(noTrabajaron.length>0){htmlNoTrab=`<div class="sin-trabajo-box"><b style="color:var(--rojo);font-size:.82rem">❌ Sin ninguna actividad (${noTrabajaron.length} estudiantes):</b><br>${noTrabajaron.map(s=>'<span style="font-size:.78rem;background:#fff;padding:1px 6px;border-radius:20px;margin:2px 3px;display:inline-block">'+s.nombreEstudiante+'</span>').join('')}</div>`;}
   let htmlSinAct='';
   if(sinActividad.length>0){htmlSinAct=`<div class="sin-actividad-box"><b style="color:var(--naranja);font-size:.82rem">⏳ Conectados +30min sin actividad:</b><br>${sinActividad.map(s=>'<span style="font-size:.78rem;background:#fff;padding:1px 6px;border-radius:20px;margin:2px 3px;display:inline-block">'+s.nombreEstudiante+' ('+calcDur(s)+'min)</span>').join('')}</div>`;}
-  document.getElementById('analisis-contenido').innerHTML=`
+  const analisisNeuro = generarAnalisisNeuro(ses);
+  document.getElementById('analisis-contenido').innerHTML=analisisNeuro+`
     <div class="analisis-grid">
       <div class="analisis-box"><h4>📊 Datos cuantitativos</h4><div>
         <b>Participación:</b> ${total}${tareaActiva?' de '+tareaActiva.esperados:''} estudiantes (${pctPart}%)<br>
@@ -461,14 +670,33 @@ window.verDetalle=function(id){
   const NOMBRES_CAT={ortografia:'Ortografía',coherencia:'Coherencia',cohesion:'Cohesión',vocabulario:'Vocabulario',puntuacion:'Puntuación',creatividad:'Creatividad',sintaxis:'Sintaxis'};
   const ETIQ={1:'⚠️ A mejorar',2:'📈 Regular',3:'✅ Bien',4:'⭐ Muy bien',5:'🏆 Excelente'};
   const COLORES={1:'#C62828',2:'#E65100',3:'#F9A825',4:'#1565C0',5:'#2E7D32'};
+  const DUA_INFO={dislexia:{emoji:'📖',label:'Dislexia',color:'#1565C0',tip:'Usa textos cortos, fuente grande y apoyo visual.'},tdah:{emoji:'⚡',label:'TDAH',color:'#F57F17',tip:'Actividades breves, pausas frecuentes, instrucciones claras.'},tea:{emoji:'🧩',label:'TEA',color:'#6A1B9A',tip:'Rutinas predecibles, instrucciones literales, evitar metáforas.'},sordomudo:{emoji:'🤟',label:'Sordomudo',color:'#2E7D32',tip:'Aprendizaje visual, lengua de señas, material gráfico.'},di:{emoji:'💡',label:'DI Leve',color:'#BF360C',tip:'Vocabulario sencillo, ejemplos concretos, refuerzo positivo.'},tipico:{emoji:'👤',label:'Típico',color:'#555',tip:'Ritmo regular de aprendizaje.'}};
+  const perfilKey=(s.perfil||'tipico').toLowerCase().replace(/[^a-z]/g,'');
+  const duaInfo=DUA_INFO[perfilKey]||DUA_INFO.tipico;
+  const REGION_EMOJI={sierra:'🏔️ Sierra',costa:'🌊 Costa',amazonia:'🌿 Amazonía',galapagos:'🐢 Galápagos'};
   let htmlRubrica='';
   if(s.ultimaRubrica&&Object.keys(s.ultimaRubrica).length>0){
-    htmlRubrica='<div style="background:var(--morado-cl);border-radius:12px;padding:12px;margin-top:10px"><b style="color:var(--morado);font-size:.8rem">📊 Última rúbrica del estudiante:</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">'+Object.entries(s.ultimaRubrica).map(([k,v])=>`<div style="background:#fff;border-radius:8px;padding:8px;text-align:center"><div style="font-size:.65rem;color:var(--texto2)">${NOMBRES_CAT[k]||k}</div><div style="font-weight:800;color:${COLORES[v]};font-size:1.1rem">${v}/5</div><div style="font-size:.62rem;color:${COLORES[v]}">${ETIQ[v]||''}</div></div>`).join('')+'</div></div>';
+    htmlRubrica='<div style="background:var(--morado-cl);border-radius:12px;padding:12px;margin-top:10px"><b style="color:var(--morado);font-size:.8rem">📊 Última rúbrica:</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">'+Object.entries(s.ultimaRubrica).map(([k,v])=>`<div style="background:#fff;border-radius:8px;padding:8px;text-align:center"><div style="font-size:.65rem;color:var(--texto2)">${NOMBRES_CAT[k]||k}</div><div style="font-weight:800;color:${COLORES[v]};font-size:1.1rem">${v}/5</div><div style="font-size:.62rem;color:${COLORES[v]}">${ETIQ[v]||''}</div></div>`).join('')+'</div></div>';
+  }
+  // Portafolio
+  let htmlPortafolio='';
+  if(s.portafolio&&s.portafolio.length>0){
+    htmlPortafolio=`<div style="background:var(--azul-cl);border-radius:12px;padding:12px;margin-top:10px"><b style="color:var(--azul);font-size:.8rem">📁 Portafolio (${s.portafolio.length} entradas):</b><div style="margin-top:6px">${s.portafolio.slice(-3).map(e=>`<div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:5px;font-size:.78rem"><b style="color:var(--naranja)">${e.tipo||'Texto'}</b> · ${e.fecha||''}<br><span style="color:var(--texto2)">${(e.texto||'').substring(0,120)}${(e.texto||'').length>120?'...':''}</span></div>`).join('')}</div></div>`;
+  }
+  // Alertas sociales
+  let htmlAlertas='';
+  if(s.alertasSociales&&s.alertasSociales.length>0){
+    htmlAlertas=`<div style="background:var(--rojo-cl);border:2px solid var(--rojo);border-radius:12px;padding:12px;margin-top:10px"><b style="color:var(--rojo);font-size:.8rem">⚠️ Alertas sociales (${s.alertasSociales.length}):</b><div style="margin-top:6px">${s.alertasSociales.map(a=>`<div style="background:#fff;border-radius:8px;padding:6px 10px;margin-bottom:4px;font-size:.78rem"><b>${a.hora||''}</b> — ${a.texto}</div>`).join('')}</div></div>`;
   }
   document.getElementById('det-nombre').textContent=s.nombreEstudiante||'Estudiante';
   document.getElementById('det-body').innerHTML=`
+    <div style="background:${duaInfo.color}15;border:2px solid ${duaInfo.color}30;border-radius:12px;padding:10px;margin-bottom:10px">
+      <b style="color:${duaInfo.color}">${duaInfo.emoji} Perfil DUA: ${duaInfo.label}</b>
+      <div style="font-size:.78rem;color:var(--texto2);margin-top:3px">💡 ${duaInfo.tip}</div>
+    </div>
     <div class="det-stat"><span class="det-stat-label">Estado</span><span class="det-stat-val">${s.activo?'🟢 Conectado':'⚫ Desconectado'}</span></div>
     <div class="det-stat"><span class="det-stat-label">Nivel</span><span class="det-stat-val">${s.nivel||'—'}</span></div>
+    <div class="det-stat"><span class="det-stat-label">Región</span><span class="det-stat-val">${REGION_EMOJI[(s.region||'').toLowerCase()]||s.region||'—'}</span></div>
     <div class="det-stat"><span class="det-stat-label">Institución</span><span class="det-stat-val">${s.institucion||'—'}</span></div>
     <div class="det-stat"><span class="det-stat-label">Paralelo</span><span class="det-stat-val">${s.paralelo||'—'}</span></div>
     <div class="det-stat"><span class="det-stat-label">Tarea</span><span class="det-stat-val">${s.tareaId||'Libre'}</span></div>
@@ -478,8 +706,9 @@ window.verDetalle=function(id){
     <div class="det-stat"><span class="det-stat-label">Textos revisados</span><span class="det-stat-val" style="color:var(--verde)">${s.textosRevisados||0}</span></div>
     <div class="det-stat"><span class="det-stat-label">Errores corregidos</span><span class="det-stat-val" style="color:var(--azul)">${s.erroresCorregidos||0}</span></div>
     <div class="det-stat"><span class="det-stat-label">Cuentos creados</span><span class="det-stat-val" style="color:var(--naranja)">${s.cuentosCreados||0}</span></div>
-    ${htmlRubrica}
-    <div style="display:flex;gap:8px;margin-top:14px">
+    <div class="det-stat"><span class="det-stat-label">Juegos jugados</span><span class="det-stat-val" style="color:var(--morado)">${s.juegosJugados||0}</span></div>
+    ${htmlRubrica}${htmlPortafolio}${htmlAlertas}
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
       <button class="btn-accion btn-chat" style="padding:8px 14px;font-size:.82rem" onclick="cerrarDetalle();abrirChatDoc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${s.activo})">💬 Enviar mensaje</button>
       ${s.activo?`<button class="btn-accion btn-desconectar" style="padding:8px 14px;font-size:.82rem" onclick="cerrarDetalle();pedirDesc('${s.id}','${(s.nombreEstudiante||'').replace(/'/g,"\\'")}',${dur})">⏹ Desconectar</button>`:''}
     </div>`;
@@ -572,36 +801,913 @@ window.exportarCSV=function(){
   mostrarNotif('CSV exportado con rúbrica por criterios');
 };
 
-// ══ REPORTE PDF (texto imprimible) ══
+// ══ REPORTE ANALÍTICO PROFESIONAL — NIVEL MINEDUC / DECE / UDAI ══
 window.exportarPDF=function(){
+  if(todasSesiones.length===0){mostrarNotif('No hay datos para el reporte');return;}
+  const hoy=new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'});
+  const horaGen=new Date().toLocaleTimeString('es-EC');
+  const total=todasSesiones.length;
+
+  // ── Datos cuantitativos base ──
+  const completaron=todasSesiones.filter(s=>(s.textosRevisados||0)>0);
+  const pctComp=total>0?Math.round((completaron.length/total)*100):0;
+  const totalTx=todasSesiones.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  const totalErr=todasSesiones.reduce((a,s)=>a+(s.erroresCorregidos||0),0);
+  const totalCt=todasSesiones.reduce((a,s)=>a+(s.cuentosCreados||0),0);
+  const tms=todasSesiones.map(s=>calcDur(s)).filter(t=>t>0);
+  const promT=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  const maxT=tms.length?Math.max(...tms):0;
+  const minT=tms.length?Math.min(...tms):0;
+  const noTrab=todasSesiones.filter(s=>(s.textosRevisados||0)+(s.erroresCorregidos||0)===0);
+  const sinAct=todasSesiones.filter(s=>calcDur(s)>15&&(s.textosRevisados||0)===0);
+
+  // ── Competencias lingüísticas (rúbrica) ──
+  const acumComp={};
+  todasSesiones.forEach(s=>{if(s.ultimaRubrica)Object.entries(s.ultimaRubrica).forEach(([k,v])=>{if(!acumComp[k]){acumComp[k]={s:0,n:0,hist:[]};}acumComp[k].s+=v;acumComp[k].n++;acumComp[k].hist.push(v);});});
+  const NCOMP={ortografia:'Ortografía',coherencia:'Coherencia',cohesion:'Cohesión',vocabulario:'Vocabulario',creatividad:'Creatividad',puntuacion:'Puntuación',sintaxis:'Sintaxis',registro:'Registro',argumentacion:'Argumentación'};
+  const DCDCOMP={ortografia:'LL.3.1.2 — Aplicar normas ortográficas',coherencia:'LL.3.4.3 — Organizar ideas con coherencia',cohesion:'LL.3.4.4 — Usar conectores y cohesión',vocabulario:'LL.3.3.1 — Ampliar vocabulario contextual',creatividad:'LL.3.4.6 — Producción creativa',puntuacion:'LL.3.1.3 — Usar signos de puntuación',sintaxis:'LL.3.4.2 — Estructurar oraciones',argumentacion:'LL.4.4.5 — Argumentar con evidencias'};
+
+  // ── Perfiles DUA ──
+  const duaConteo={lector:0,atencion:0,comunicacion:0,visual:0,apoyo:0,ninguno:0};
+  todasSesiones.forEach(s=>{const p=(s.perfil||'ninguno');if(duaConteo[p]!==undefined)duaConteo[p]++;else duaConteo.ninguno++;});
+
+  // ── Distribución regional ──
+  const regConteo={sierra:0,costa:0,amazonia:0,galapagos:0};
+  todasSesiones.forEach(s=>{const r=(s.region||'sierra').toLowerCase();if(regConteo[r]!==undefined)regConteo[r]++;});
+
+  // ── Análisis por estudiante — nivel pedagógico ──
+  function nivelCompetencia(prom){
+    if(prom>=4.5)return{txt:'Domina',col:'#1B5E20',bg:'#E8F5E9',cod:'DA'};
+    if(prom>=3.5)return{txt:'Alcanza',col:'#1565C0',bg:'#E3F2FD',cod:'AA'};
+    if(prom>=2.5)return{txt:'Próximo a alcanzar',col:'#E65100',bg:'#FFF3E0',cod:'PAA'};
+    return{txt:'No alcanza',col:'#C62828',bg:'#FFEBEE',cod:'NAA'};
+  }
+
+  // ── Errores más frecuentes del grupo ──
+  const errFrec={};
+  todasSesiones.forEach(s=>{if(s.ultimaRubrica)Object.entries(s.ultimaRubrica).forEach(([k,v])=>{if(v<=2){if(!errFrec[k])errFrec[k]=0;errFrec[k]++;}});});
+  const topErr=Object.entries(errFrec).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+  // ── Gráfico SVG de barras de competencias ──
+  function svgBarrasComp(){
+    const items=Object.entries(acumComp);
+    if(items.length===0)return '<p style="color:#999;font-size:11px;text-align:center">Sin datos de rúbrica aún</p>';
+    const W=520,H=160,pad=40,barW=Math.min(44,Math.floor((W-pad*2)/items.length)-6);
+    let svg=`<svg width="100%" viewBox="0 0 ${W} ${H+60}" xmlns="http://www.w3.org/2000/svg" style="max-width:${W}px">`;
+    // Líneas guía
+    [1,2,3,4,5].forEach(v=>{const y=H-Math.round((v/5)*(H-20));svg+=`<line x1="${pad}" y1="${y}" x2="${W-10}" y2="${y}" stroke="#E0E0E0" stroke-width="1"/>`;svg+=`<text x="${pad-4}" y="${y+4}" text-anchor="end" font-size="9" fill="#999">${v}</text>`;});
+    items.forEach(([k,v],i)=>{
+      const prom=v.s/v.n;const pct=prom/5;
+      const x=pad+i*(barW+6);const barH=Math.round(pct*(H-20));const y=H-barH;
+      const col=prom<2.5?'#C62828':prom<3.5?'#FF8C00':prom<4.5?'#1565C0':'#2E7D32';
+      svg+=`<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${col}" opacity="0.85"/>`;
+      svg+=`<text x="${x+barW/2}" y="${y-4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${col}">${prom.toFixed(1)}</text>`;
+      const label=(NCOMP[k]||k).substring(0,8);
+      svg+=`<text x="${x+barW/2}" y="${H+14}" text-anchor="middle" font-size="9" fill="#555">${label}</text>`;
+    });
+    svg+=`<line x1="${pad}" y1="${H}" x2="${W-10}" y2="${H}" stroke="#333" stroke-width="1.5"/>`;
+    svg+='</svg>';return svg;
+  }
+
+  // ── Gráfico de radar SVG (pentagon) — competencias ──
+  function svgRadar(){
+    const items=Object.entries(acumComp).slice(0,6);
+    if(items.length<3)return '';
+    const cx=110,cy=110,r=85,n=items.length;
+    let svg=`<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">`;
+    // Fondo
+    [0.2,0.4,0.6,0.8,1].forEach(f=>{
+      const pts=Array.from({length:n},(_,i)=>{const a=(2*Math.PI*i/n)-Math.PI/2;return`${cx+r*f*Math.cos(a)},${cy+r*f*Math.sin(a)}`;}).join(' ');
+      svg+=`<polygon points="${pts}" fill="none" stroke="#E0E0E0" stroke-width="1"/>`;
+    });
+    // Ejes
+    Array.from({length:n},(_,i)=>{const a=(2*Math.PI*i/n)-Math.PI/2;svg+=`<line x1="${cx}" y1="${cy}" x2="${cx+r*Math.cos(a)}" y2="${cy+r*Math.sin(a)}" stroke="#DDD" stroke-width="1"/>`;});
+    // Datos
+    const pts=items.map(([k,v],i)=>{const f=(v.s/v.n)/5;const a=(2*Math.PI*i/n)-Math.PI/2;return`${cx+r*f*Math.cos(a)},${cy+r*f*Math.sin(a)}`;}).join(' ');
+    svg+=`<polygon points="${pts}" fill="#1565C020" stroke="#1565C0" stroke-width="2"/>`;
+    // Etiquetas
+    items.forEach(([k],i)=>{const a=(2*Math.PI*i/n)-Math.PI/2;const lx=cx+(r+18)*Math.cos(a);const ly=cy+(r+18)*Math.sin(a);svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" font-size="9" fill="#555">${(NCOMP[k]||k).substring(0,7)}</text>`;});
+    svg+='</svg>';return svg;
+  }
+
+  // ── Gráfico torta participación ──
+  function svgTorta(ok,total){
+    const pct=total>0?ok/total:0;const r=50,cx=60,cy=60;
+    const a1=pct*2*Math.PI;const x1=cx+r*Math.sin(a1),y1=cy-r*Math.cos(a1);const lg=pct>0.5?1:0;
+    let path=pct>=1?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#2E7D32"/>`:pct===0?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#C62828"/>`:`<path d="M${cx},${cy} L${cx},${cy-r} A${r},${r} 0 ${lg},1 ${x1},${y1} Z" fill="#2E7D32"/><path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${1-lg},1 ${cx},${cy-r} Z" fill="#C62828"/>`;
+    return`<svg width="120" height="120" viewBox="0 0 120 120">${path}<circle cx="${cx}" cy="${cy}" r="28" fill="white"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">${Math.round(pct*100)}%</text></svg>`;
+  }
+
+  // ── Análisis neuroeducativo por perfil ──
+  function analisisDUA(){
+    const perfiles=Object.entries(duaConteo).filter(([,n])=>n>0);
+    if(perfiles.every(([,n])=>n===0)||duaConteo.ninguno===total)return '';
+    const INFO={lector:{n:'Dislexia/Disgrafía',rec:'Priorizar el contenido sobre la forma. Usar texto grande y espaciado. Retroalimentación verbal.'},atencion:{n:'TDAH/TAC',rec:'Actividades cortas y secuenciadas. Pausas frecuentes. Refuerzo inmediato de logros.'},comunicacion:{n:'TEA/Asperger',rec:'Instrucciones literales y predecibles. Evitar lenguaje figurado. Estructura fija de actividades.'},visual:{n:'Baja visión/Sordomudo',rec:'Apoyo visual prioritario. Material gráfico. Sin instrucciones dependientes del audio.'},apoyo:{n:'DI Leve/TOA',rec:'Vocabulario sencillo. Una instrucción por vez. Refuerzo positivo constante.'}};
+    return perfiles.filter(([k])=>k!=='ninguno'&&INFO[k]).map(([k,n])=>`<tr><td><b>${INFO[k].n}</b></td><td style="text-align:center">${n} est. (${Math.round(n/total*100)}%)</td><td style="font-size:10px;color:#555">${INFO[k].rec}</td></tr>`).join('');
+  }
+
+  // ── Análisis individual detallado ──
+  function tablaIndividual(){
+    return todasSesiones.map(s=>{
+      const r=s.ultimaRubrica||{};const dur=calcDur(s);const tx=s.textosRevisados||0;
+      const promsRub=Object.values(r);const promRub=promsRub.length?promsRub.reduce((a,b)=>a+b,0)/promsRub.length:0;
+      const nivel=nivelCompetencia(promRub);
+      const dua={lector:'📖 Dislexia',atencion:'⚡ TDAH',comunicacion:'🧩 TEA',visual:'👁️ Visual',apoyo:'🤝 DI Leve',ninguno:'—'}[s.perfil||'ninguno']||'—';
+      const fortaleza=Object.entries(r).sort((a,b)=>b[1]-a[1])[0];
+      const debilidad=Object.entries(r).sort((a,b)=>a[1]-b[1])[0];
+      const alertaS=s.tieneAlertaSocial?'<span style="color:#C62828;font-weight:bold">⚠️ Alerta social</span>':'';
+      return`<tr style="border-bottom:1px solid #EEE">
+        <td style="padding:7px 5px"><b>${s.nombreEstudiante||'?'}</b><br><span style="font-size:9px;color:#888">${s.paralelo||''} ${s.nivel||''}</span></td>
+        <td style="text-align:center;padding:5px"><span style="background:${nivel.bg};color:${nivel.col};padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold">${nivel.cod}</span></td>
+        <td style="text-align:center">${dur}m</td>
+        <td style="text-align:center;color:#2E7D32;font-weight:bold">${tx}</td>
+        <td style="text-align:center">${s.erroresCorregidos||0}</td>
+        <td style="font-size:10px">${dua}</td>
+        <td style="font-size:10px;color:#2E7D32">${fortaleza?`${NCOMP[fortaleza[0]]||fortaleza[0]} (${fortaleza[1]}/5)`:'-'}</td>
+        <td style="font-size:10px;color:#C62828">${debilidad&&debilidad[1]<4?`${NCOMP[debilidad[0]]||debilidad[0]} (${debilidad[1]}/5)`:'-'}</td>
+        <td style="font-size:10px">${Object.entries(r).map(([k,v])=>`${(NCOMP[k]||k).substring(0,5)}:${v}`).join(' | ')||'Sin datos'}</td>
+        <td>${alertaS}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Recomendaciones pedagógicas por criterio ──
+  function recomendacionesCurriculares(){
+    if(topErr.length===0)return '<p style="color:#2E7D32">✅ El grupo no presenta errores recurrentes significativos.</p>';
+    return topErr.map(([k,n])=>`
+      <div style="background:#FFF8E1;border-left:4px solid #FF8C00;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:8px">
+        <b style="color:#E65100">${NCOMP[k]||k}</b> — ${n} estudiante(s) con puntaje ≤2/5
+        <div style="font-size:11px;color:#555;margin-top:3px">📌 DCD: ${DCDCOMP[k]||'Lenguaje y Comunicación'}</div>
+        <div style="font-size:11px;color:#333;margin-top:2px">💡 Estrategia: ${
+          k==='ortografia'?'Dictados dirigidos, uso de reglas mnemotécnicas, revisión entre pares':
+          k==='coherencia'?'Mapas conceptuales previos a la escritura, uso de esquemas de planificación':
+          k==='cohesion'?'Tarjetas de conectores, práctica de sustitución pronominal':
+          k==='vocabulario'?'Lectura extensiva, glosarios temáticos, uso del diccionario':
+          k==='puntuacion'?'Lectura en voz alta para sentir las pausas, ejercicios de puntuación':
+          k==='creatividad'?'Estímulos visuales, escritura libre, lluvia de ideas colaborativa':
+          'Ejercicios estructurados y modelaje docente'
+        }</div>
+      </div>`).join('');
+  }
+
+  // ── Nivel de logro general del grupo (escala MINEDUC) ──
+  const escalaMineduc=pctComp>=90?{txt:'Domina los Aprendizajes Requeridos',cod:'DAR',col:'#1B5E20',bg:'#E8F5E9'}:pctComp>=70?{txt:'Alcanza los Aprendizajes Requeridos',cod:'AAR',col:'#1565C0',bg:'#E3F2FD'}:pctComp>=50?{txt:'Próximo a Alcanzar los Aprendizajes',cod:'PAR',col:'#E65100',bg:'#FFF3E0'}:{txt:'No Alcanza los Aprendizajes Requeridos',cod:'NAR',col:'#C62828',bg:'#FFEBEE'};
+
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Informe Pedagógico — Profesor Búho — ${hoy}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Arial',sans-serif;background:#fff;color:#222;font-size:12px;line-height:1.5;}
+    .page{max-width:900px;margin:0 auto;padding:28px 32px;}
+    /* ENCABEZADO */
+    .header{background:linear-gradient(135deg,#FF8C00,#E65100);color:#fff;padding:18px 24px;border-radius:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+    .header h1{font-size:18px;margin-bottom:3px;}
+    .header .sub{font-size:11px;opacity:.9;}
+    .logo{font-size:2.5rem;}
+    /* SECCIÓN */
+    .seccion{margin-bottom:20px;}
+    h2{font-size:13px;color:#1565C0;border-bottom:2px solid #1565C020;padding-bottom:5px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;}
+    h3{font-size:12px;color:#E65100;margin-bottom:8px;font-weight:bold;}
+    /* FICHA */
+    .ficha{background:#F8F9FA;border:1px solid #E0E0E0;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;}
+    .ficha-item b{display:block;color:#555;font-size:10px;text-transform:uppercase;margin-bottom:2px;}
+    /* KPI GRID */
+    .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px;}
+    .kpi{border-radius:8px;padding:10px 6px;text-align:center;border:2px solid;}
+    .kpi .num{font-size:22px;font-weight:bold;display:block;}
+    .kpi .lab{font-size:9px;color:#666;margin-top:2px;}
+    /* NIVEL LOGRO */
+    .nivel-logro{border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;}
+    .nivel-cod{font-size:28px;font-weight:bold;}
+    /* GRÁFICOS */
+    .graficos-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:16px;align-items:start;}
+    .grafico-box{background:#F8F9FA;border-radius:8px;padding:12px;border:1px solid #E8E8E8;}
+    /* TABLA */
+    table{width:100%;border-collapse:collapse;font-size:10.5px;}
+    thead th{background:#1565C0;color:#fff;padding:7px 5px;text-align:left;font-size:10px;font-weight:bold;}
+    tbody tr:nth-child(even){background:#F8F9FA;}
+    tbody td{padding:6px 5px;border-bottom:1px solid #EEE;vertical-align:top;}
+    /* ANÁLISIS */
+    .analisis-box{background:#F0F4FF;border-left:4px solid #1565C0;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:12px;font-size:11.5px;line-height:1.7;}
+    .alert-box{background:#FFF3E0;border-left:4px solid #FF8C00;padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:10px;font-size:11px;}
+    .firma{margin-top:30px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+    .firma-item{text-align:center;border-top:1px solid #333;padding-top:8px;font-size:10px;}
+    @media print{
+      button{display:none!important;}
+      body{font-size:11px;}
+      .page{padding:15px 20px;}
+    }
+  </style></head><body>
+  <div class="page">
+
+  <!-- ENCABEZADO INSTITUCIONAL -->
+  <div class="header">
+    <div>
+      <div style="font-size:11px;opacity:.8;margin-bottom:4px">INFORME ANALÍTICO DE PROGRESO EN PRODUCCIÓN ESCRITA</div>
+      <h1>Profesor Búho — Plataforma Educativa con IA</h1>
+      <div class="sub">Basado en el Currículo Nacional MINEDUC Ecuador 2016 (Actualización 2019)</div>
+    </div>
+    <div class="logo">🦉</div>
+  </div>
+
+  <!-- FICHA TÉCNICA -->
+  <div class="seccion">
+    <h2>📋 Ficha técnica del informe</h2>
+    <div class="ficha">
+      <div class="ficha-item"><b>Docente</b>${docenteNombre||'—'}</div>
+      <div class="ficha-item"><b>Institución</b>${docenteInstitucion||'—'}</div>
+      <div class="ficha-item"><b>Curso / Año</b>${docenteCurso||'—'}</div>
+      <div class="ficha-item"><b>Fecha de sesión</b>${hoy}</div>
+      <div class="ficha-item"><b>Generado</b>${horaGen}</div>
+      <div class="ficha-item"><b>Tarea evaluada</b>${tareaActiva?tareaActiva.titulo:'Actividad libre'}</div>
+      <div class="ficha-item"><b>Área curricular</b>Lengua y Literatura — EGB</div>
+      <div class="ficha-item"><b>Bloque curricular</b>Producción de textos escritos</div>
+      <div class="ficha-item"><b>Estudiantes evaluados</b>${total} estudiantes</div>
+    </div>
+  </div>
+
+  <!-- NIVEL DE LOGRO MINEDUC -->
+  <div class="seccion">
+    <h2>🎯 Nivel de logro del grupo — Escala MINEDUC</h2>
+    <div class="nivel-logro" style="background:${escalaMineduc.bg};border:2px solid ${escalaMineduc.col}20">
+      <div class="nivel-cod" style="color:${escalaMineduc.col}">${escalaMineduc.cod}</div>
+      <div>
+        <div style="font-weight:bold;font-size:14px;color:${escalaMineduc.col}">${escalaMineduc.txt}</div>
+        <div style="font-size:11px;color:#555;margin-top:3px">Participación: ${pctComp}% del grupo completó la actividad de producción escrita.</div>
+        <div style="font-size:11px;color:#555">Referencia: Escala de calificaciones MINEDUC (Acuerdo Ministerial MINEDUC-ME-2016-00122-A)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDICADORES CUANTITATIVOS -->
+  <div class="seccion">
+    <h2>📊 Indicadores cuantitativos de la sesión</h2>
+    <div class="kpi-grid">
+      <div class="kpi" style="border-color:#FF8C00;background:#FFF3E0"><span class="num" style="color:#FF8C00">${total}</span><span class="lab">Estudiantes</span></div>
+      <div class="kpi" style="border-color:#2E7D32;background:#E8F5E9"><span class="num" style="color:#2E7D32">${completaron.length}</span><span class="lab">Completaron</span></div>
+      <div class="kpi" style="border-color:#1565C0;background:#E3F2FD"><span class="num" style="color:#1565C0">${pctComp}%</span><span class="lab">Participación</span></div>
+      <div class="kpi" style="border-color:#6A1B9A;background:#F3E5F5"><span class="num" style="color:#6A1B9A">${totalTx}</span><span class="lab">Textos revisados</span></div>
+      <div class="kpi" style="border-color:#00838F;background:#E0F7FA"><span class="num" style="color:#00838F">${promT}m</span><span class="lab">T. promedio</span></div>
+      <div class="kpi" style="border-color:#C62828;background:#FFEBEE"><span class="num" style="color:#C62828">${noTrab.length}</span><span class="lab">Sin actividad</span></div>
+    </div>
+    <div style="background:#F8F9FA;border-radius:8px;padding:10px 14px;font-size:11px;color:#555;display:flex;gap:24px;flex-wrap:wrap;">
+      <span>⏱️ Tiempo mínimo: <b>${minT}min</b></span>
+      <span>⏱️ Tiempo máximo: <b>${maxT}min</b></span>
+      <span>✏️ Errores corregidos: <b>${totalErr}</b></span>
+      <span>📖 Cuentos creados: <b>${totalCt}</b></span>
+      <span>📋 Promedio textos/estudiante: <b>${total>0?(totalTx/total).toFixed(1):0}</b></span>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS -->
+  <div class="seccion">
+    <h2>📈 Análisis gráfico de competencias lingüísticas</h2>
+    <div class="graficos-row">
+      <div class="grafico-box">
+        <h3>Competencias del grupo (promedio rúbrica 1-5)</h3>
+        ${svgBarrasComp()}
+        <div style="font-size:9px;color:#999;margin-top:4px;text-align:center">Escala: 1=No alcanza · 2-3=Próximo · 4=Alcanza · 5=Domina</div>
+      </div>
+      <div>
+        <div class="grafico-box" style="margin-bottom:10px">
+          <h3>Participación</h3>
+          ${svgTorta(completaron.length,total)}
+          <div style="font-size:10px;margin-top:4px">
+            <div>🟢 Completaron: ${completaron.length}</div>
+            <div>🔴 Sin actividad: ${noTrab.length}</div>
+          </div>
+        </div>
+        <div class="grafico-box">
+          <h3>Tiempo (distribución)</h3>
+          ${(()=>{const rng=[{l:'0-10m',n:0},{l:'11-20m',n:0},{l:'21-30m',n:0},{l:'+30m',n:0}];tms.forEach(t=>{if(t<=10)rng[0].n++;else if(t<=20)rng[1].n++;else if(t<=30)rng[2].n++;else rng[3].n++;});const mx=Math.max(...rng.map(r=>r.n),1);return rng.map((r,i)=>{const w=Math.round((r.n/mx)*100);const col=['#FF8C00','#2E7D32','#1565C0','#6A1B9A'][i];return`<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span>${r.l}</span><span style="font-weight:bold">${r.n}</span></div><div style="background:#E0E0E0;border-radius:3px;height:10px"><div style="width:${w}%;background:${col};height:100%;border-radius:3px"></div></div></div>`;}).join('');})()}
+        </div>
+      </div>
+      <div class="grafico-box">
+        <h3>Radar de competencias</h3>
+        ${svgRadar()||'<p style="font-size:10px;color:#999;text-align:center;padding:20px 0">Requiere datos de rúbrica</p>'}
+      </div>
+    </div>
+  </div>
+
+  <!-- ANÁLISIS DE COMPETENCIAS CON DCD -->
+  ${Object.keys(acumComp).length>0?`
+  <div class="seccion">
+    <h2>📚 Análisis por destrezas con criterios de desempeño (DCD) — MINEDUC</h2>
+    <table>
+      <thead><tr><th>Destreza / Competencia</th><th>DCD Curricular</th><th>Promedio grupo</th><th>Nivel de logro</th><th>% bajo nivel</th><th>Acción recomendada</th></tr></thead>
+      <tbody>
+      ${Object.entries(acumComp).map(([k,v])=>{
+        const prom=v.s/v.n;const nivel=nivelCompetencia(prom);
+        const bajoCnt=v.hist.filter(x=>x<=2).length;const bajoPct=Math.round((bajoCnt/v.hist.length)*100);
+        return`<tr>
+          <td><b>${NCOMP[k]||k}</b></td>
+          <td style="font-size:9px;color:#1565C0">${DCDCOMP[k]||'—'}</td>
+          <td style="text-align:center;font-weight:bold;color:${nivel.col}">${prom.toFixed(2)}/5</td>
+          <td><span style="background:${nivel.bg};color:${nivel.col};padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold">${nivel.cod} — ${nivel.txt}</span></td>
+          <td style="text-align:center;color:${bajoPct>30?'#C62828':'#555'};font-weight:${bajoPct>30?'bold':'normal'}">${bajoPct}%</td>
+          <td style="font-size:10px;color:#555">${bajoPct>40?'⚠️ Refuerzo urgente requerido':bajoPct>20?'📌 Refuerzo planificado':prom>=4.5?'✅ Fortalecer y enriquecer':'📖 Consolidar con práctica'}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>`:''}
+
+  <!-- ANÁLISIS INDIVIDUAL DETALLADO -->
+  <div class="seccion">
+    <h2>👨‍🎓 Informe individual por estudiante</h2>
+    <table>
+      <thead><tr>
+        <th>Estudiante</th><th>Nivel logro</th><th>Tiempo</th><th>Textos</th><th>Errores</th>
+        <th>Perfil DUA</th><th>Fortaleza</th><th>A reforzar</th><th>Rúbrica detallada</th><th>Observación</th>
+      </tr></thead>
+      <tbody>${tablaIndividual()}</tbody>
+    </table>
+    <div style="font-size:9px;color:#777;margin-top:6px;padding:6px 10px;background:#F8F9FA;border-radius:4px">
+      <b>Escala MINEDUC:</b> DA = Domina los Aprendizajes (≥4.5) · AA = Alcanza los Aprendizajes (≥3.5) · PAA = Próximo a Alcanzar (≥2.5) · NAA = No Alcanza (&lt;2.5)
+    </div>
+  </div>
+
+  <!-- ANÁLISIS DUA / INCLUSIÓN -->
+  ${Object.values(duaConteo).some((v,i)=>i<5&&v>0)?`
+  <div class="seccion">
+    <h2>♿ Análisis de inclusión educativa — Marco DUA (Diseño Universal para el Aprendizaje)</h2>
+    <div class="alert-box">
+      <b>Referencia normativa:</b> LOEI Art. 47 — Educación inclusiva · Acuerdo Ministerial MINEDUC-ME-2013-00020-A · Modelo Nacional de Gestión y Atención a Estudiantes con NEE (UDAI 2016)
+    </div>
+    <table>
+      <thead><tr><th>Perfil de necesidad</th><th>Estudiantes</th><th>Recomendaciones pedagógicas (DECE/UDAI)</th></tr></thead>
+      <tbody>${analisisDUA()||'<tr><td colspan="3" style="text-align:center;color:#999">Todos los estudiantes con perfil estándar</td></tr>'}</tbody>
+    </table>
+  </div>`:''}
+
+  <!-- ERRORES FRECUENTES Y PLAN DE MEJORA -->
+  <div class="seccion">
+    <h2>🔍 Errores frecuentes del grupo y estrategias de intervención</h2>
+    ${recomendacionesCurriculares()}
+  </div>
+
+  <!-- ANÁLISIS PSICOPEDAGÓGICO -->
+  <div class="seccion">
+    <h2>🧠 Análisis psicopedagógico y neuroeducativo</h2>
+    <div class="analisis-box">
+      <b>Perfil de aprendizaje del grupo:</b><br>
+      ${pctComp>=80
+        ?'El grupo demuestra una <b>disposición positiva hacia la escritura</b> con alto nivel de autorregulación. Los estudiantes sostienen la atención durante la actividad y muestran motivación intrínseca hacia la producción textual. Desde la neuroeducación (Immordino-Yang, 2016), la emoción positiva hacia la tarea facilita la consolidación del aprendizaje a largo plazo.'
+        :pctComp>=50
+        ?'El grupo presenta un <b>perfil heterogéneo</b> en cuanto a la disposición hacia la escritura. Un segmento significativo requiere estrategias de motivación extrínseca para iniciar la producción textual. Se recomienda aplicar el modelo de Aprendizaje Basado en Proyectos (ABP) para incrementar la relevancia percibida de la tarea.'
+        :'El grupo presenta <b>indicadores de bloqueo ante la escritura</b> (grafofobia o ansiedad ante la producción textual). Desde la neuroeducación, el estrés inhibe el córtex prefrontal necesario para la escritura creativa (Sapolsky, 2017). Se recomienda iniciar con escritura libre sin evaluación y usar estímulos visuales motivadores.'}
+      <br><br>
+      <b>Tiempo de compromiso cognitivo:</b> El tiempo promedio de ${promT} minutos
+      ${promT>=20?' indica un <b>nivel adecuado de compromiso cognitivo</b> (flow state). Los estudiantes sostienen la atención ejecutiva necesaria para la producción escrita.':promT>=10?' indica un <b>nivel básico de engagement</b>. Se recomienda implementar la técnica Pomodoro adaptada (15 min escritura + 5 min descanso) para sostener la atención.':' es insuficiente para alcanzar el estado de flow necesario en la producción escrita. Se recomienda revisar la dificultad de la tarea y el ambiente de trabajo.'}
+      <br><br>
+      <b>Implicaciones para la planificación:</b> Según la carga cognitiva del grupo (Sweller, 1988), se recomienda 
+      ${Object.keys(acumComp).length>0&&Math.min(...Object.values(acumComp).map(v=>v.s/v.n))<2.5
+        ?'dividir los criterios de escritura en mini-retos secuenciales. No evaluar todos los criterios simultáneamente — priorizar ortografía y coherencia como base.'
+        :'mantener la complejidad actual e introducir gradualmente nuevos géneros textuales del currículo MINEDUC.'}
+    </div>
+  </div>
+
+  <!-- OBSERVACIONES Y ALERTAS -->
+  ${noTrab.length>0||sinAct.length>0?`
+  <div class="seccion">
+    <h2>⚠️ Observaciones prioritarias</h2>
+    ${noTrab.length>0?`<div style="background:#FFEBEE;border:1px solid #FFCDD2;border-radius:8px;padding:12px;margin-bottom:10px">
+      <b style="color:#C62828">Estudiantes sin producción escrita (${noTrab.length}):</b>
+      <div style="margin-top:6px">${noTrab.map(s=>`<span style="display:inline-block;background:#fff;border:1px solid #FFCDD2;border-radius:4px;padding:2px 8px;margin:2px;font-size:11px">${s.nombreEstudiante}</span>`).join('')}</div>
+      <div style="font-size:11px;color:#555;margin-top:6px">Acción sugerida: Contacto individual con la familia. Verificar si existe barrera de acceso tecnológico, emocional o de comprensión de la tarea.</div>
+    </div>`:''}
+    ${sinAct.length>0?`<div style="background:#FFF3E0;border:1px solid #FFE0B2;border-radius:8px;padding:12px">
+      <b style="color:#E65100">Conectados sin actividad registrada (${sinAct.length}):</b>
+      <div style="margin-top:4px;font-size:11px;color:#555">Estos estudiantes iniciaron sesión pero no produjeron texto. Posibles causas: distracción, dificultad para comenzar (bloqueo del escritor), o incomprensión de la tarea. Recomendación DECE: aplicar estrategia de acompañamiento "Escritura compartida".</div>
+    </div>`:''}
+  </div>`:''}
+
+  <!-- RECOMENDACIONES FINALES -->
+  <div class="seccion">
+    <h2>💡 Recomendaciones pedagógicas para la próxima sesión</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:#E8F5E9;border-radius:8px;padding:12px;border-left:4px solid #2E7D32">
+        <b style="color:#2E7D32">📗 Planificación curricular</b>
+        <div style="font-size:11px;margin-top:6px;line-height:1.7">
+          ${pctComp>=80?'✅ El grupo está listo para avanzar al siguiente tipo textual del currículo MINEDUC. Proponer textos argumentativos o de opinión.':'📌 Reforzar la planificación textual antes de escribir. Usar organizadores gráficos (mapa de ideas, esquema causa-efecto).'}
+          <br>${topErr.length>0?`Priorizar el refuerzo de <b>${NCOMP[topErr[0][0]]||topErr[0][0]}</b> en la próxima clase (DCD: ${DCDCOMP[topErr[0][0]]||'Lenguaje y Comunicación'}).`:'Los estudiantes demuestran manejo equilibrado de las destrezas evaluadas.'}
+        </div>
+      </div>
+      <div style="background:#E3F2FD;border-radius:8px;padding:12px;border-left:4px solid #1565C0">
+        <b style="color:#1565C0">📘 Estrategias metodológicas</b>
+        <div style="font-size:11px;margin-top:6px;line-height:1.7">
+          • Escritura colaborativa en parejas para estudiantes con niveles PAA y NAA<br>
+          • Rúbrica de coevaluación entre pares<br>
+          • Portafolio digital de producciones escritas<br>
+          • Técnica del "borrador visible" — mostrar el proceso de escritura
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIRMAS -->
+  <div class="firma">
+    <div class="firma-item">
+      <div style="margin-bottom:30px"></div>
+      <b>${docenteNombre||'Docente'}</b><br>
+      Docente responsable<br>
+      ${docenteCurso||''}
+    </div>
+    <div class="firma-item">
+      <div style="margin-bottom:30px"></div>
+      <b>DECE / Departamento de Consejería</b><br>
+      Revisado por
+    </div>
+    <div class="firma-item">
+      <div style="margin-bottom:30px"></div>
+      <b>Rectorado / Vicerrectorado</b><br>
+      Conocimiento
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;font-size:9px;color:#AAA;border-top:1px solid #EEE;padding-top:10px">
+    Generado por Profesor Búho — Plataforma Educativa con IA para Ecuador · ${hoy} · ${horaGen}<br>
+    Basado en: Currículo Nacional MINEDUC 2016 · LOEI · Marco DUA · Acuerdo Ministerial MINEDUC-ME-2016-00122-A
+  </div>
+
+  <br>
+  <button onclick="window.print()" style="background:#FF8C00;color:#fff;border:none;padding:12px 32px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;display:block;margin:0 auto">🖨️ Imprimir / Guardar como PDF</button>
+  </div>
+  </body></html>`);
+  win.document.close();
+};
   if(todasSesiones.length===0){mostrarNotif('No hay datos');return;}
   const hoy=new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'});
   const completaron=todasSesiones.filter(s=>(s.textosRevisados||0)>0).length;
   const pctComp=todasSesiones.length>0?Math.round((completaron/todasSesiones.length)*100):0;
   const totalTx=todasSesiones.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  const totalErr=todasSesiones.reduce((a,s)=>a+(s.erroresCorregidos||0),0);
+  const totalCt=todasSesiones.reduce((a,s)=>a+(s.cuentosCreados||0),0);
   const tms=todasSesiones.map(s=>calcDur(s)).filter(t=>t>0);
   const promT=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
-  const noTrab=todasSesiones.filter(s=>(s.textosRevisados||0)===(0));
+  const noTrab=todasSesiones.filter(s=>(s.textosRevisados||0)+(s.erroresCorregidos||0)===(0));
+  // Competencias del grupo
+  const acumComp={};
+  todasSesiones.forEach(s=>{if(s.ultimaRubrica)Object.entries(s.ultimaRubrica).forEach(([k,v])=>{if(!acumComp[k]){acumComp[k]={s:0,n:0};}acumComp[k].s+=v;acumComp[k].n++;});});
+  const NCOMP={ortografia:'Ortografía',coherencia:'Coherencia',cohesion:'Cohesión',vocabulario:'Vocabulario',creatividad:'Creatividad',puntuacion:'Puntuación'};
+  const barrasComp=Object.entries(acumComp).map(([k,v])=>{
+    const prom=(v.s/v.n).toFixed(1);const pct=Math.round((parseFloat(prom)/5)*100);
+    const col=pct<50?'#C62828':pct<70?'#FF8C00':'#2E7D32';
+    return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span><b>${NCOMP[k]||k}</b></span><span style="color:${col};font-weight:bold">${prom}/5 &nbsp; ${pct}%</span></div><div style="background:#E0E0E0;border-radius:4px;height:14px"><div style="width:${pct}%;background:${col};height:100%;border-radius:4px;transition:width .5s"></div></div></div>`;
+  }).join('');
+  // Barras de tiempo
+  const rangos=[{l:'0-10m',n:0},{l:'11-20m',n:0},{l:'21-30m',n:0},{l:'+30m',n:0}];
+  tms.forEach(t=>{if(t<=10)rangos[0].n++;else if(t<=20)rangos[1].n++;else if(t<=30)rangos[2].n++;else rangos[3].n++;});
+  const maxR=Math.max(...rangos.map(r=>r.n),1);
+  const coloresBarra=['#FF8C00','#2E7D32','#1565C0','#6A1B9A'];
+  const barrasTiempo=rangos.map((r,i)=>{const h=Math.max(Math.round((r.n/maxR)*100),4);return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px"><div style="width:60%;background:${coloresBarra[i]};height:${h}px;border-radius:4px 4px 0 0"></div><div style="font-size:10px;color:#666">${r.l}</div><div style="font-weight:bold;font-size:13px">${r.n}</div></div>`;}).join('');
+  // Torta participación (SVG)
+  const pctNoTrab=todasSesiones.length>0?Math.round((noTrab.length/todasSesiones.length)*100):0;
+  const pctOk=100-pctNoTrab;
+  const r=50,cx=60,cy=60;
+  const a1=(pctOk/100)*2*Math.PI;
+  const x1=cx+r*Math.sin(a1),y1=cy-r*Math.cos(a1);
+  const lg=pctOk>50?1:0;
+  const svgTorta=pctOk===100?
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#2E7D32"/>`:
+    pctOk===0?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#C62828"/>`:
+    `<path d="M${cx},${cy} L${cx},${cy-r} A${r},${r} 0 ${lg},1 ${x1},${y1} Z" fill="#2E7D32"/>
+     <path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${1-lg},1 ${cx},${cy-r} Z" fill="#C62828"/>`;
+
   const win=window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte Profesor Búho</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#333;max-width:800px;margin:0 auto;}h1{color:#FF8C00;font-size:22px;}h2{color:#1565C0;font-size:16px;border-bottom:2px solid #E0E0E0;padding-bottom:6px;margin-top:20px;}table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}th{background:#F8F9FA;padding:8px;text-align:left;border:1px solid #E0E0E0;font-weight:bold;}td{padding:7px 8px;border:1px solid #E0E0E0;}tr:nth-child(even){background:#FAFAFA;}.stat{display:inline-block;margin:8px 12px;text-align:center;}.stat-num{font-size:28px;font-weight:bold;color:#FF8C00;display:block;}.stat-label{font-size:11px;color:#666;}.alerta{color:#C62828;font-weight:bold;}@media print{button{display:none;}}</style></head><body>
-    <h1>🦉 Reporte — Profesor Búho</h1>
-    <p><b>Docente:</b> ${docenteNombre} &nbsp;|&nbsp; <b>Institución:</b> ${docenteInstitucion} &nbsp;|&nbsp; <b>Curso:</b> ${docenteCurso}</p>
-    <p><b>Fecha:</b> ${hoy}</p>
-    <h2>Resumen general</h2>
-    <div><span class="stat"><span class="stat-num">${todasSesiones.length}</span><span class="stat-label">Estudiantes</span></span><span class="stat"><span class="stat-num">${completaron}</span><span class="stat-label">Completaron</span></span><span class="stat"><span class="stat-num">${pctComp}%</span><span class="stat-label">Participación</span></span><span class="stat"><span class="stat-num">${totalTx}</span><span class="stat-label">Textos revisados</span></span><span class="stat"><span class="stat-num">${promT}min</span><span class="stat-label">Tiempo promedio</span></span></div>
-    <h2>Detalle por estudiante</h2>
-    <table><thead><tr><th>Nombre</th><th>Estado</th><th>Tiempo</th><th>Textos</th><th>Errores</th><th>Ortog.</th><th>Coher.</th><th>Cohes.</th></tr></thead><tbody>
-    ${todasSesiones.map(s=>{const r=s.ultimaRubrica||{};const dur=calcDur(s);const al=dur>90?'class="alerta"':'';return`<tr><td ${al}>${s.nombreEstudiante||'?'}</td><td>${s.activo?'🟢 Conectado':'⚫ Desc.'}</td><td ${al}>${dur}min${dur>90?' ⚠️':''}</td><td>${s.textosRevisados||0}</td><td>${s.erroresCorregidos||0}</td><td>${r.ortografia?r.ortografia+'/5':'—'}</td><td>${r.coherencia?r.coherencia+'/5':'—'}</td><td>${r.cohesion?r.cohesion+'/5':'—'}</td></tr>`;}).join('')}
-    </tbody></table>
-    ${noTrab.length>0?`<h2 style="color:var(--rojo)">Estudiantes sin actividad</h2><p class="alerta">${noTrab.map(s=>s.nombreEstudiante).join(', ')}</p>`:''}
-    <h2>Recomendación</h2><p>${pctComp>=80?'Excelente sesión. El grupo trabajó activamente.':pctComp>=60?'Mayoría participó. Algunos necesitan apoyo individualizado.':'Baja participación. Revisar instrucciones y dificultad de la tarea.'}</p>
-    <br><button onclick="window.print()" style="background:#FF8C00;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Imprimir / Guardar PDF</button>
-    </body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Reporte Profesor Búho — ${hoy}</title>
+  <style>
+    *{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:24px 28px;color:#333;max-width:860px;margin:0 auto;font-size:13px;}
+    h1{color:#FF8C00;font-size:21px;margin:0 0 4px}h2{color:#1565C0;font-size:14px;border-bottom:2px solid #E0E0E0;padding-bottom:4px;margin:18px 0 10px}
+    .meta{font-size:11px;color:#777;margin-bottom:16px;line-height:1.8}
+    .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+    .s{background:#FFF3E0;border:2px solid #FF8C00;border-radius:8px;padding:9px 4px;text-align:center}
+    .s.v{background:#E8F5E9;border-color:#2E7D32}.s.a{background:#E3F2FD;border-color:#1565C0}.s.r{background:#FFEBEE;border-color:#C62828}.s.m{background:#F3E5F5;border-color:#6A1B9A}
+    .sn{font-size:22px;font-weight:bold;color:#FF8C00;display:block}.s.v .sn{color:#2E7D32}.s.a .sn{color:#1565C0}.s.r .sn{color:#C62828}.s.m .sn{color:#6A1B9A}
+    .sl{font-size:10px;color:#777}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    .box{background:#F8F9FA;border-radius:8px;padding:12px}
+    .barras-t{display:flex;align-items:flex-end;height:90px;gap:4px;border-bottom:2px solid #E0E0E0;padding-bottom:0;margin-bottom:4px}
+    table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
+    th{background:#FF8C00;color:#fff;padding:6px 7px;text-align:left;font-size:10px}
+    td{padding:5px 7px;border-bottom:1px solid #EEEEEE}tr:nth-child(even)td{background:#FAFAFA}
+    .al{color:#C62828;font-weight:bold}.ok{color:#2E7D32;font-weight:bold}
+    .recom{background:#E8F5E9;border-left:4px solid #2E7D32;padding:10px 13px;border-radius:0 8px 8px 0;font-size:12px;line-height:1.6;margin-top:10px}
+    .noact{background:#FFEBEE;border-left:4px solid #C62828;padding:8px 12px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:8px}
+    .leyenda{display:flex;gap:12px;margin-top:6px;font-size:11px}
+    .ley{display:flex;align-items:center;gap:4px}.ley-dot{width:12px;height:12px;border-radius:50%}
+    @media print{button{display:none!important}}
+  </style></head><body>
+  <h1>🦉 Reporte de Sesión — Profesor Búho</h1>
+  <div class="meta">
+    <b>Docente:</b> ${docenteNombre} &nbsp;·&nbsp; <b>Institución:</b> ${docenteInstitucion||'—'} &nbsp;·&nbsp; <b>Curso:</b> ${docenteCurso}<br>
+    <b>Fecha:</b> ${hoy} &nbsp;·&nbsp; <b>Generado:</b> ${new Date().toLocaleTimeString('es-EC')}
+  </div>
+
+  <div class="stats">
+    <div class="s"><span class="sn">${todasSesiones.length}</span><span class="sl">Estudiantes</span></div>
+    <div class="s v"><span class="sn">${completaron}</span><span class="sl">Completaron</span></div>
+    <div class="s a"><span class="sn">${pctComp}%</span><span class="sl">Participación</span></div>
+    <div class="s"><span class="sn">${totalTx}</span><span class="sl">Textos rev.</span></div>
+    <div class="s m"><span class="sn">${promT}m</span><span class="sl">T. promedio</span></div>
+    <div class="s r"><span class="sn">${noTrab.length}</span><span class="sl">Sin actividad</span></div>
+  </div>
+
+  <div class="row2">
+    ${Object.keys(acumComp).length>0?`<div class="box"><h2 style="margin-top:0">📊 Competencias del grupo</h2>${barrasComp}</div>`:`<div class="box"><h2 style="margin-top:0">📊 Competencias</h2><p style="color:#999;font-size:12px">Sin datos de rúbrica aún.</p></div>`}
+    <div>
+      <div class="box" style="margin-bottom:12px">
+        <h2 style="margin-top:0">⏱️ Distribución de tiempo</h2>
+        <div class="barras-t">${barrasTiempo}</div>
+        <div style="font-size:10px;color:#999">Número de estudiantes por rango de tiempo</div>
+      </div>
+      <div class="box">
+        <h2 style="margin-top:0">🥧 Participación</h2>
+        <div style="display:flex;align-items:center;gap:16px">
+          <svg width="120" height="120" viewBox="0 0 120 120">${svgTorta}<circle cx="${cx}" cy="${cy}" r="25" fill="white"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">${pctOk}%</text></svg>
+          <div class="leyenda" style="flex-direction:column">
+            <div class="ley"><div class="ley-dot" style="background:#2E7D32"></div> Participaron (${completaron})</div>
+            <div class="ley"><div class="ley-dot" style="background:#C62828"></div> Sin actividad (${noTrab.length})</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>👨‍🎓 Detalle por estudiante</h2>
+  <table>
+    <thead><tr><th>Nombre</th><th>Estado</th><th>Institución</th><th>Tarea</th><th>Tiempo</th><th>Textos</th><th>Errores</th><th>Ortog.</th><th>Coher.</th><th>Cohes.</th></tr></thead>
+    <tbody>
+    ${todasSesiones.map(s=>{
+      const r=s.ultimaRubrica||{};const dur=calcDur(s);
+      const al=dur>90?' class="al"':'';const tx=s.textosRevisados||0;
+      return`<tr><td${al}><b>${s.nombreEstudiante||'?'}</b></td><td>${s.activo?'🟢 Conectado':'⚫ Desc.'}</td><td style="font-size:10px">${s.institucion||'—'}</td><td>${s.tareaId||'Libre'}</td><td${al}>${dur}m${dur>90?' ⚠️':''}</td><td class="${tx>0?'ok':''}">${tx}</td><td>${s.erroresCorregidos||0}</td><td>${r.ortografia?r.ortografia+'/5':'—'}</td><td>${r.coherencia?r.coherencia+'/5':'—'}</td><td>${r.cohesion?r.cohesion+'/5':'—'}</td></tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+
+  ${noTrab.length>0?`<h2 style="color:#C62828">❌ Sin actividad</h2><div class="noact">${noTrab.map(s=>s.nombreEstudiante).join(' · ')}</div>`:''}
+
+  <h2>💡 Recomendación pedagógica</h2>
+  <div class="recom">
+    ${pctComp>=80?'<b>✅ Excelente sesión.</b> El grupo trabajó activamente. Puedes avanzar con contenido nuevo la próxima clase.':pctComp>=60?'<b>⚠️ Participación regular.</b> Identifica a los estudiantes que no completaron para darles apoyo individualizado.':'<b>❌ Baja participación.</b> Revisa las instrucciones y considera simplificar la tarea.'}
+    ${promT<10?' Se recomienda ampliar el tiempo de la actividad.':promT>45?' Excelente nivel de dedicación del grupo.':''}
+    ${Object.keys(acumComp).length>0?'<br><br>Enfocarse en reforzar los criterios con puntuación más baja en la rúbrica.':''}
+  </div>
+
+  <br><button onclick="window.print()" style="background:#FF8C00;color:#fff;border:none;padding:11px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;margin-top:8px">🖨️ Imprimir / Guardar como PDF</button>
+  </body></html>`);
   win.document.close();
 };
 
-window.cerrarSesionDocente=function(){if(unsubscribe)unsubscribe();Object.values(unsubChats).forEach(u=>u());document.getElementById('panel').style.display='none';document.getElementById('login-screen').style.display='flex';};
+// ══ REPORTE DENTRO DEL PANEL — MODAL ══
+window.abrirModalReporte=function(){
+  if(todasSesiones.length===0){mostrarNotif('No hay datos para el reporte');return;}
+  const htmlReporte=generarHTMLReporte();
+  document.getElementById('reporte-contenido').innerHTML=htmlReporte;
+  document.getElementById('modal-reporte').style.display='block';
+};
+window.cerrarModalReporte=function(e){
+  if(!e||e.target.id==='modal-reporte')document.getElementById('modal-reporte').style.display='none';
+};
+window.imprimirReporte=function(){
+  const contenido=document.getElementById('reporte-contenido').innerHTML;
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe Profesor Búho</title>
+  <style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;margin:0;padding:20px;}@media print{button{display:none!important}}</style>
+  </head><body>${contenido}<br><button onclick="window.print()" style="background:#FF8C00;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold">🖨️ Imprimir</button></body></html>`);
+  win.document.close();setTimeout(()=>win.print(),500);
+};
+window.descargarReportePDF=function(){
+  // Usar html2pdf.js (CDN)
+  if(!window.html2pdf){
+    const script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload=()=>_descargarConHtml2pdf();
+    document.head.appendChild(script);
+  }else{_descargarConHtml2pdf();}
+};
+function _descargarConHtml2pdf(){
+  const el=document.getElementById('reporte-contenido');
+  const opt={margin:[10,10,10,10],filename:`Informe_ProfesorBuho_${new Date().toLocaleDateString('es-EC').replace(/\//g,'-')}.pdf`,image:{type:'jpeg',quality:.95},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+  mostrarNotif('⏳ Generando PDF...');
+  html2pdf().set(opt).from(el).save().then(()=>mostrarNotif('✅ PDF descargado'));
+}
+
+// ══ MÓDULO ANÁLISIS DE CURSO CON IA ══
+let archivosIA=[];
+
+window.dragOver=function(e){e.preventDefault();document.getElementById('zona-drop').classList.add('drag-over');};
+window.dragLeave=function(){document.getElementById('zona-drop').classList.remove('drag-over');};
+window.dropPDFs=function(e){e.preventDefault();document.getElementById('zona-drop').classList.remove('drag-over');seleccionarPDFs(e.dataTransfer.files);};
+window.seleccionarPDFs=function(files){
+  const nuevos=Array.from(files).filter(f=>f.type==='application/pdf').slice(0,40-archivosIA.length);
+  archivosIA=[...archivosIA,...nuevos].slice(0,40);
+  renderListaPDFs();
+};
+window.limpiarPDFs=function(){archivosIA=[];renderListaPDFs();};
+
+function renderListaPDFs(){
+  const lista=document.getElementById('pdf-lista');
+  const btn=document.getElementById('btn-analizar');
+  if(archivosIA.length===0){lista.style.display='none';btn.disabled=true;return;}
+  lista.style.display='flex';
+  lista.innerHTML=archivosIA.map((f,i)=>`
+    <div class="pdf-item">
+      <span style="font-size:1.1rem">📄</span>
+      <span class="pdf-nom">${f.name}</span>
+      <span class="pdf-est listo">${(f.size/1024).toFixed(0)}KB</span>
+      <button onclick="archivosIA.splice(${i},1);renderListaPDFs()" style="background:none;border:none;color:#FF5252;cursor:pointer;font-size:1rem">✖</button>
+    </div>`).join('');
+  document.getElementById('zona-drop').querySelector('div:first-child').textContent=archivosIA.length<=20?'📂':'📦';
+  lista.insertAdjacentHTML('beforeend',`<div style="font-size:.75rem;color:rgba(255,255,255,.5);text-align:center;padding:4px">${archivosIA.length}/40 archivos cargados</div>`);
+  btn.disabled=false;
+  btn.textContent=`🧠 Analizar ${archivosIA.length} reporte(s) con IA`;
+}
+
+async function leerPDF(file){
+  // Usar PDF.js desde CDN para extraer texto
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res();}
+      s.onerror=rej;document.head.appendChild(s);
+    });
+  }
+  const arrayBuffer=await file.arrayBuffer();
+  const pdf=await window.pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  let texto='';
+  for(let i=1;i<=Math.min(pdf.numPages,8);i++){
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    texto+=content.items.map(item=>item.str).join(' ')+'\n';
+  }
+  return texto.slice(0,3000); // máximo 3000 chars por PDF para no saturar el contexto
+}
+
+window.analizarCursoIA=async function(){
+  const btn=document.getElementById('btn-analizar');
+  const progDiv=document.getElementById('ia-progreso');
+  const progTxt=document.getElementById('ia-progreso-txt');
+  const progBarra=document.getElementById('ia-barra');
+  btn.disabled=true;progDiv.style.display='block';
+
+  try{
+    // Paso 1 — Leer PDFs
+    const textos=[];
+    for(let i=0;i<archivosIA.length;i++){
+      progTxt.textContent=`📖 Leyendo PDF ${i+1}/${archivosIA.length}: ${archivosIA[i].name}...`;
+      progBarra.style.width=Math.round((i/archivosIA.length)*40)+'%';
+      // Actualizar item en lista
+      const items=document.querySelectorAll('.pdf-item');
+      if(items[i]){const est=items[i].querySelector('.pdf-est');if(est){est.className='pdf-est leyendo';est.textContent='Leyendo...';}}
+      try{
+        const txt=await leerPDF(archivosIA[i]);
+        textos.push({nombre:archivosIA[i].name,texto:txt});
+        if(items[i]){const est=items[i].querySelector('.pdf-est');if(est){est.className='pdf-est listo';est.textContent='✅ Listo';}}
+      }catch(e){
+        textos.push({nombre:archivosIA[i].name,texto:'[No se pudo leer este PDF]'});
+        if(items[i]){const est=items[i].querySelector('.pdf-est');if(est){est.className='pdf-est error';est.textContent='❌ Error';}}
+      }
+    }
+
+    // Paso 2 — Análisis en lotes de 10
+    progTxt.textContent='🧠 La IA está analizando los reportes...';
+    progBarra.style.width='50%';
+
+    const PROXY=`https://tiny-bushprofesor-buho-proxy.gobalnetsml.workers.dev`;
+    const lotes=[];
+    for(let i=0;i<textos.length;i+=10)lotes.push(textos.slice(i,i+10));
+
+    const analisisParciales=[];
+    for(let l=0;l<lotes.length;l++){
+      progTxt.textContent=`🧠 Analizando lote ${l+1}/${lotes.length}...`;
+      progBarra.style.width=(50+Math.round((l/lotes.length)*30))+'%';
+      const lote=lotes[l];
+      const prompt=`Eres un psicólogo educativo, pedagogo y psicólogo clínico experto en educación básica del Ecuador. Analiza estos ${lote.length} reportes estudiantiles y genera un análisis psicopedagógico profesional.
+
+REPORTES:
+${lote.map((t,i)=>`=== ESTUDIANTE ${i+1}: ${t.nombre} ===\n${t.texto}`).join('\n\n')}
+
+Genera en español un análisis JSON con esta estructura exacta:
+{
+  "estudiantes": [
+    {
+      "nombre": "nombre del archivo o estudiante",
+      "nivelLogro": "DA/AA/PAA/NAA",
+      "fortalezas": "descripción cualitativa de 2-3 fortalezas",
+      "areasRefuerzo": "áreas que necesita trabajar",
+      "perfilPsicoped": "análisis psicopedagógico breve de 2 oraciones como lo haría un psicólogo educativo",
+      "recomendacionPadres": "mensaje claro para padres de familia",
+      "recomendacionDocente": "estrategia pedagógica específica"
+    }
+  ],
+  "analisisGrupal": "análisis del grupo como lo haría un pedagogo experto, 3-4 oraciones",
+  "nivelGrupo": "DA/AA/PAA/NAA",
+  "patronesIdentificados": "patrones de aprendizaje observados en el grupo",
+  "recomendacionDECE": "recomendación técnica para DECE/UDAI",
+  "recomendacionRectorado": "síntesis ejecutiva para directivos"
+}
+Responde SOLO con el JSON, sin texto adicional.`;
+
+      try{
+        const resp=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',messages:[{role:'user',content:prompt}],temperature:0.4,max_tokens:2000})});
+        const data=await resp.json();
+        const txt=data.choices?.[0]?.message?.content||'{}';
+        const limpio=txt.replace(/```json|```/g,'').trim();
+        analisisParciales.push(JSON.parse(limpio));
+      }catch(e){analisisParciales.push({estudiantes:[],analisisGrupal:'Error al procesar este lote.',nivelGrupo:'PAA'});}
+    }
+
+    // Paso 3 — Síntesis final si hay múltiples lotes
+    progTxt.textContent='📊 Generando informe final...';
+    progBarra.style.width='85%';
+
+    let analisisFinal=analisisParciales[0]||{};
+    if(analisisParciales.length>1){
+      const todosEst=analisisParciales.flatMap(a=>a.estudiantes||[]);
+      analisisFinal.estudiantes=todosEst;
+      // Síntesis narrativa del grupo
+      try{
+        const promptSintesis=`Como psicólogo educativo y pedagogo experto, sintetiza el análisis de estos ${todosEst.length} estudiantes ecuatorianos en un informe ejecutivo. Niveles de logro: ${todosEst.map(e=>e.nivelLogro).join(', ')}. Patrones detectados: ${analisisParciales.map(a=>a.patronesIdentificados||'').join('. ')}. Genera un párrafo para: analisisGrupal, patronesIdentificados, recomendacionDECE, recomendacionRectorado. Responde en JSON.`;
+        const resp2=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',messages:[{role:'user',content:promptSintesis}],temperature:0.4,max_tokens:800})});
+        const data2=await resp2.json();
+        const txt2=(data2.choices?.[0]?.message?.content||'{}').replace(/```json|```/g,'').trim();
+        const sint=JSON.parse(txt2);
+        analisisFinal={...analisisFinal,...sint};
+      }catch(e){}
+    }
+
+    progBarra.style.width='100%';
+    progTxt.textContent='✅ Análisis completado. Generando informe...';
+
+    // Paso 4 — Mostrar informe
+    setTimeout(()=>{
+      mostrarInformeIA(analisisFinal,textos.length);
+      progDiv.style.display='none';
+      btn.disabled=false;
+    },800);
+
+  }catch(err){
+    progTxt.textContent='❌ Error: '+err.message;
+    btn.disabled=false;
+  }
+};
+
+function mostrarInformeIA(data,totalPDFs){
+  const est=data.estudiantes||[];
+  const NIVEL_INFO={
+    DA:{txt:'Domina los Aprendizajes',col:'#1B5E20',bg:'#E8F5E9'},
+    AA:{txt:'Alcanza los Aprendizajes',col:'#1565C0',bg:'#E3F2FD'},
+    PAA:{txt:'Próximo a Alcanzar',col:'#E65100',bg:'#FFF3E0'},
+    NAA:{txt:'No Alcanza',col:'#C62828',bg:'#FFEBEE'}
+  };
+  const contNivel={DA:0,AA:0,PAA:0,NAA:0};
+  est.forEach(e=>{if(contNivel[e.nivelLogro]!==undefined)contNivel[e.nivelLogro]++;});
+  const nGrupo=NIVEL_INFO[data.nivelGrupo||'AA']||NIVEL_INFO.AA;
+  const hoy=new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'});
+
+  const html=`<div style="font-family:Arial,sans-serif;font-size:12px;color:#222;padding:24px 28px;max-width:860px;margin:0 auto;">
+
+  <!-- ENCABEZADO -->
+  <div style="background:linear-gradient(135deg,#FF8C00,#E65000);color:#fff;padding:18px 22px;border-radius:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:10px;opacity:.8;margin-bottom:3px">ANÁLISIS PSICOPEDAGÓGICO CON INTELIGENCIA ARTIFICIAL</div>
+      <div style="font-family:Arial;font-size:17px;font-weight:bold">Informe de Curso — Profesor Búho</div>
+      <div style="font-size:10px;opacity:.85;margin-top:2px">Docente: ${docenteNombre} · Institución: ${docenteInstitucion||'—'} · ${hoy}</div>
+    </div>
+    <div style="font-size:2.5rem">🦉</div>
+  </div>
+
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;">
+    <div style="background:#FFF3E0;border:2px solid #FF8C00;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#FF8C00">${totalPDFs}</div><div style="font-size:10px;color:#777">Reportes analizados</div></div>
+    <div style="background:#E8F5E9;border:2px solid #2E7D32;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#2E7D32">${contNivel.DA}</div><div style="font-size:10px;color:#777">Dominan (DA)</div></div>
+    <div style="background:#E3F2FD;border:2px solid #1565C0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#1565C0">${contNivel.AA}</div><div style="font-size:10px;color:#777">Alcanzan (AA)</div></div>
+    <div style="background:#FFF3E0;border:2px solid #E65100;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#E65100">${contNivel.PAA}</div><div style="font-size:10px;color:#777">Próximos (PAA)</div></div>
+    <div style="background:#FFEBEE;border:2px solid #C62828;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#C62828">${contNivel.NAA}</div><div style="font-size:10px;color:#777">No alcanzan (NAA)</div></div>
+  </div>
+
+  <!-- NIVEL GRUPAL -->
+  <div style="background:${nGrupo.bg};border:2px solid ${nGrupo.col}30;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:14px;align-items:center;">
+    <div style="font-size:26px;font-weight:bold;color:${nGrupo.col};min-width:50px">${data.nivelGrupo||'AA'}</div>
+    <div><div style="font-weight:bold;color:${nGrupo.col};font-size:13px">${nGrupo.txt} — Nivel del curso</div>
+    <div style="font-size:11px;color:#555;margin-top:3px">${data.analisisGrupal||'Análisis grupal en proceso.'}</div></div>
+  </div>
+
+  <!-- GRÁFICO BARRAS NIVELES SVG -->
+  <div style="background:#F8F9FA;border-radius:8px;padding:14px;margin-bottom:16px;">
+    <div style="font-weight:bold;font-size:12px;color:#1565C0;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">📊 Distribución de niveles de logro</div>
+    ${(()=>{
+      const total2=Object.values(contNivel).reduce((a,b)=>a+b,0)||1;
+      const cols={DA:'#2E7D32',AA:'#1565C0',PAA:'#E65100',NAA:'#C62828'};
+      return Object.entries(contNivel).map(([k,v])=>{
+        const pct=Math.round((v/total2)*100);const w=Math.max(pct,2);
+        return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span><b>${k}</b> — ${NIVEL_INFO[k]?.txt||k}</span><span style="font-weight:bold;color:${cols[k]}">${v} estudiante(s) · ${pct}%</span></div>
+        <div style="background:#E0E0E0;border-radius:4px;height:16px"><div style="width:${w}%;background:${cols[k]};height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px"><span style="font-size:9px;color:#fff;font-weight:bold">${v}</span></div></div></div>`;
+      }).join('');
+    })()}
+  </div>
+
+  <!-- ANÁLISIS INDIVIDUAL -->
+  ${est.length>0?`
+  <div style="margin-bottom:16px;">
+    <div style="font-weight:bold;font-size:12px;color:#1565C0;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E0E0E0;padding-bottom:5px">👨‍🎓 Análisis individual por estudiante</div>
+    ${est.map(e=>{const ni=NIVEL_INFO[e.nivelLogro]||NIVEL_INFO.AA;return`
+    <div style="border:1px solid #E0E0E0;border-radius:8px;margin-bottom:10px;overflow:hidden;">
+      <div style="background:${ni.bg};padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid ${ni.col}20">
+        <span style="font-weight:bold;color:#222">${e.nombre.replace('.pdf','')}</span>
+        <span style="background:${ni.bg};color:${ni.col};border:1px solid ${ni.col};padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold">${e.nivelLogro} — ${ni.txt}</span>
+      </div>
+      <div style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+        <div><b style="color:#2E7D32">✅ Fortalezas:</b><div style="color:#555;margin-top:2px">${e.fortalezas||'—'}</div></div>
+        <div><b style="color:#C62828">📌 Reforzar:</b><div style="color:#555;margin-top:2px">${e.areasRefuerzo||'—'}</div></div>
+        <div style="grid-column:1/-1"><b style="color:#6A1B9A">🧠 Perfil psicopedagógico:</b><div style="color:#555;margin-top:2px;font-style:italic">${e.perfilPsicoped||'—'}</div></div>
+        <div><b style="color:#1565C0">👨‍👩‍👧 Para padres:</b><div style="color:#555;margin-top:2px">${e.recomendacionPadres||'—'}</div></div>
+        <div><b style="color:#FF8C00">💡 Estrategia docente:</b><div style="color:#555;margin-top:2px">${e.recomendacionDocente||'—'}</div></div>
+      </div>
+    </div>`;}).join('')}
+  </div>`:''}
+
+  <!-- PATRONES Y RECOMENDACIONES -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div style="background:#E8F5E9;border-left:4px solid #2E7D32;padding:12px;border-radius:0 8px 8px 0;">
+      <b style="color:#2E7D32;font-size:11px">🔍 Patrones identificados</b>
+      <div style="font-size:11px;color:#333;margin-top:5px;line-height:1.6">${data.patronesIdentificados||'El análisis de IA no detectó patrones claros. Se recomienda mayor cantidad de datos.'}</div>
+    </div>
+    <div style="background:#E3F2FD;border-left:4px solid #1565C0;padding:12px;border-radius:0 8px 8px 0;">
+      <b style="color:#1565C0;font-size:11px">🏫 Para DECE/UDAI</b>
+      <div style="font-size:11px;color:#333;margin-top:5px;line-height:1.6">${data.recomendacionDECE||'—'}</div>
+    </div>
+  </div>
+  <div style="background:#FFF3E0;border-left:4px solid #FF8C00;padding:12px;border-radius:0 8px 8px 0;margin-bottom:16px;">
+    <b style="color:#E65100;font-size:11px">📋 Síntesis ejecutiva para Rectorado</b>
+    <div style="font-size:11px;color:#333;margin-top:5px;line-height:1.6">${data.recomendacionRectorado||'—'}</div>
+  </div>
+
+  <!-- PIE -->
+  <div style="text-align:center;font-size:9px;color:#AAA;border-top:1px solid #EEE;padding-top:10px;margin-top:16px">
+    Generado por Profesor Búho con IA — ${hoy} · Docente: ${docenteNombre} · ${docenteInstitucion||''}
+  </div>
+  </div>`;
+
+  // Abrir modal con el contenido del análisis IA
+  document.getElementById('reporte-contenido').innerHTML=html;
+  document.getElementById('modal-reporte').style.display='block';
+  mostrarNotif('✅ Análisis completado — '+est.length+' estudiantes procesados');
+}
 function mostrarNotif(msg){const n=document.getElementById('notif');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',3000);}
+
+// ══ CERRAR SESIÓN ══
+window.cerrarSesionDocente=function(){if(unsubscribe)unsubscribe();Object.values(unsubChats).forEach(u=>u());document.getElementById('panel').style.display='none';document.getElementById('login-screen').style.display='flex';};
+
+// ══ GENERARHTML REPORTE ══
+function generarHTMLReporte(){
+  if(todasSesiones.length===0)return '<p style="padding:20px;color:#999;text-align:center">No hay datos registrados aún.</p>';
+  const hoy=new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'});
+  const horaGen=new Date().toLocaleTimeString('es-EC');
+  const total=todasSesiones.length;
+  const completaron=todasSesiones.filter(s=>(s.textosRevisados||0)>0);
+  const pctComp=total>0?Math.round((completaron.length/total)*100):0;
+  const totalTx=todasSesiones.reduce((a,s)=>a+(s.textosRevisados||0),0);
+  const tms=todasSesiones.map(s=>calcDur(s)).filter(t=>t>0);
+  const promT=tms.length?Math.round(tms.reduce((a,b)=>a+b,0)/tms.length):0;
+  const noTrab=todasSesiones.filter(s=>(s.textosRevisados||0)+(s.erroresCorregidos||0)===0);
+  const escalaMineduc=pctComp>=90?{txt:'Domina los Aprendizajes Requeridos',cod:'DAR',col:'#1B5E20',bg:'#E8F5E9'}:pctComp>=70?{txt:'Alcanza los Aprendizajes Requeridos',cod:'AAR',col:'#1565C0',bg:'#E3F2FD'}:pctComp>=50?{txt:'Próximo a Alcanzar los Aprendizajes',cod:'PAR',col:'#E65100',bg:'#FFF3E0'}:{txt:'No Alcanza los Aprendizajes Requeridos',cod:'NAR',col:'#C62828',bg:'#FFEBEE'};
+  const acumComp={};
+  todasSesiones.forEach(s=>{if(s.ultimaRubrica)Object.entries(s.ultimaRubrica).forEach(([k,v])=>{if(!acumComp[k]){acumComp[k]={s:0,n:0};}acumComp[k].s+=v;acumComp[k].n++;});});
+  const NCOMP={ortografia:'Ortografía',coherencia:'Coherencia',cohesion:'Cohesión',vocabulario:'Vocabulario',creatividad:'Creatividad',puntuacion:'Puntuación'};
+  return `<div style="font-family:Arial,sans-serif;font-size:12px;color:#222;padding:24px 28px;">
+  <div style="background:linear-gradient(135deg,#FF8C00,#E65000);color:#fff;padding:16px 22px;border-radius:10px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+    <div><div style="font-size:10px;opacity:.8">INFORME ANALÍTICO — MINEDUC ECUADOR</div>
+    <div style="font-size:17px;font-weight:bold;margin-top:2px">🦉 Profesor Búho — ${docenteNombre}</div>
+    <div style="font-size:10px;opacity:.85;margin-top:2px">${docenteInstitucion||'—'} · ${docenteCurso} · ${hoy} ${horaGen}</div></div>
+    <div style="font-size:2.5rem">🦉</div>
+  </div>
+  <div style="background:${escalaMineduc.bg};border:2px solid ${escalaMineduc.col}30;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;gap:12px;align-items:center;">
+    <div style="font-size:24px;font-weight:bold;color:${escalaMineduc.col}">${escalaMineduc.cod}</div>
+    <div><div style="font-weight:bold;color:${escalaMineduc.col}">${escalaMineduc.txt}</div>
+    <div style="font-size:10px;color:#555">Participación: ${pctComp}% · ${completaron.length}/${total} estudiantes completaron.</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;">
+    <div style="background:#FFF3E0;border:2px solid #FF8C00;border-radius:8px;padding:9px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#FF8C00">${total}</div><div style="font-size:9px;color:#777">Estudiantes</div></div>
+    <div style="background:#E8F5E9;border:2px solid #2E7D32;border-radius:8px;padding:9px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#2E7D32">${completaron.length}</div><div style="font-size:9px;color:#777">Completaron</div></div>
+    <div style="background:#E3F2FD;border:2px solid #1565C0;border-radius:8px;padding:9px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#1565C0">${totalTx}</div><div style="font-size:9px;color:#777">Textos rev.</div></div>
+    <div style="background:#E0F7FA;border:2px solid #00838F;border-radius:8px;padding:9px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#00838F">${promT}m</div><div style="font-size:9px;color:#777">T. promedio</div></div>
+    <div style="background:#FFEBEE;border:2px solid #C62828;border-radius:8px;padding:9px;text-align:center"><div style="font-size:20px;font-weight:bold;color:#C62828">${noTrab.length}</div><div style="font-size:9px;color:#777">Sin actividad</div></div>
+  </div>
+  ${Object.keys(acumComp).length>0?`<div style="background:#F8F9FA;border-radius:8px;padding:12px;margin-bottom:14px;"><div style="font-weight:bold;font-size:11px;color:#1565C0;margin-bottom:8px;text-transform:uppercase">📊 Competencias lingüísticas</div>${Object.entries(acumComp).map(([k,v])=>{const prom=(v.s/v.n);const pct=Math.round((prom/5)*100);const col=pct<50?'#C62828':pct<70?'#FF8C00':'#2E7D32';return`<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><b>${NCOMP[k]||k}</b><span style="color:${col};font-weight:bold">${prom.toFixed(1)}/5</span></div><div style="background:#E0E0E0;border-radius:3px;height:12px"><div style="width:${pct}%;background:${col};height:100%;border-radius:3px"></div></div></div>`;}).join('')}</div>`:''}
+  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px;">
+    <thead><tr style="background:#FF8C00;color:#fff"><th style="padding:6px">Estudiante</th><th>Estado</th><th>Tiempo</th><th>Textos</th><th>Ortog.</th><th>Coher.</th><th>Cohes.</th></tr></thead>
+    <tbody>${todasSesiones.map(s=>{const r=s.ultimaRubrica||{};const dur=calcDur(s);return`<tr style="border-bottom:1px solid #EEE"><td style="padding:5px;font-weight:bold">${s.nombreEstudiante||'?'}</td><td style="text-align:center">${estadoReal(s)==='conectado'?'🟢 Conectado':'⚫ Desc.'}</td><td style="text-align:center">${dur}m</td><td style="text-align:center;color:#2E7D32;font-weight:bold">${s.textosRevisados||0}</td><td style="text-align:center">${r.ortografia?r.ortografia+'/5':'—'}</td><td style="text-align:center">${r.coherencia?r.coherencia+'/5':'—'}</td><td style="text-align:center">${r.cohesion?r.cohesion+'/5':'—'}</td></tr>`;}).join('')}</tbody>
+  </table>
+  <div style="text-align:center;font-size:9px;color:#AAA;border-top:1px solid #EEE;padding-top:8px">
+    Generado por Profesor Búho · ${hoy} · Basado en Currículo Nacional MINEDUC Ecuador 2016
+  </div></div>`;
+}
 </script>
 </body>
 </html>
