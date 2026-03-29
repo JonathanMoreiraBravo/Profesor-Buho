@@ -392,24 +392,6 @@ body.modo-oscuro .tab-btn.activo{background:#2A2A3E!important;color:var(--naranj
         <input type="text" id="input-paralelo" placeholder="Ej: 6to B" maxlength="20">
       </div>
     </div>
-    <!-- SELECTOR DE REGIÓN — LOEI Art. 2z Interculturalidad -->
-    <div style="margin-top:10px">
-      <label style="font-size:.8rem;margin-bottom:6px;display:block;font-weight:800">🗺️ ¿De qué región eres? (para personalizar tu experiencia)</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
-        <div class="region-card" data-region="sierra" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
-          <span style="font-size:1.4rem;display:block">🏔️</span><span style="font-size:.7rem;font-weight:800">Sierra</span>
-        </div>
-        <div class="region-card" data-region="costa" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
-          <span style="font-size:1.4rem;display:block">🌊</span><span style="font-size:.7rem;font-weight:800">Costa</span>
-        </div>
-        <div class="region-card" data-region="amazonia" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
-          <span style="font-size:1.4rem;display:block">🌿</span><span style="font-size:.7rem;font-weight:800">Amazonía</span>
-        </div>
-        <div class="region-card" data-region="galapagos" onclick="seleccionarRegion(this)" style="background:#fff;border:2px solid #E0E0E0;border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s">
-          <span style="font-size:1.4rem;display:block">🐢</span><span style="font-size:.7rem;font-weight:800">Galápagos</span>
-        </div>
-      </div>
-    </div>
     <div style="margin-top:10px">
       <label style="font-size:.8rem;margin-bottom:4px;display:block">Código de tarea de tu prof. (si tienes)</label>
       <div class="codigo-row">
@@ -419,38 +401,6 @@ body.modo-oscuro .tab-btn.activo{background:#2A2A3E!important;color:var(--naranj
       <div id="codigo-estado"></div>
     </div>
   </div>
-  <!-- SELECTOR PERFIL DUA -->
-<div id="selector-perfil-wrap" style="width:100%;max-width:520px;margin-bottom:14px;display:none">
-  <div style="font-size:.82rem;font-weight:800;color:var(--texto2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center">
-    ♿ Perfil de accesibilidad (opcional)
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
-    <div class="perfil-card" data-perfil="ninguno" onclick="seleccionarPerfil(this)" style="background:var(--naranja);color:#fff;border:2px solid var(--naranja)">
-      <span style="font-size:1.3rem">👤</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Estándar</span>
-    </div>
-    <div class="perfil-card" data-perfil="lector" onclick="seleccionarPerfil(this)">
-      <span style="font-size:1.3rem">📖</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Lector</span>
-      <span style="font-size:.6rem;opacity:.7;display:block">Dislexia/Disgrafía</span>
-    </div>
-    <div class="perfil-card" data-perfil="atencion" onclick="seleccionarPerfil(this)">
-      <span style="font-size:1.3rem">⏱️</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Atención</span>
-      <span style="font-size:.6rem;opacity:.7;display:block">TDAH/TAC</span>
-    </div>
-    <div class="perfil-card" data-perfil="comunicacion" onclick="seleccionarPerfil(this)">
-      <span style="font-size:1.3rem">🗣️</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Comunicación</span>
-      <span style="font-size:.6rem;opacity:.7;display:block">TEA/Asperger</span>
-    </div>
-    <div class="perfil-card" data-perfil="visual" onclick="seleccionarPerfil(this)">
-      <span style="font-size:1.3rem">👁️</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Visual</span>
-      <span style="font-size:.6rem;opacity:.7;display:block">Sordomudo/Visión</span>
-    </div>
-    <div class="perfil-card" data-perfil="apoyo" onclick="seleccionarPerfil(this)">
-      <span style="font-size:1.3rem">🤝</span><span style="font-size:.72rem;font-weight:800;display:block;margin-top:2px">Apoyo</span>
-      <span style="font-size:.6rem;opacity:.7;display:block">DI leve/TOA</span>
-    </div>
-  </div>
-  <div id="perfil-desc" style="text-align:center;font-size:.75rem;color:var(--texto2);margin-top:6px;min-height:16px"></div>
-</div>
 <div class="consentimiento-box">
     <label>
       <input type="checkbox" id="check-consentimiento" onchange="verificarInicio()">
@@ -953,7 +903,7 @@ function aplicarPerfilDUA(){
   if(nivelHdr && !document.getElementById('badge-perfil')) nivelHdr.after(badge);
 }
 
-function seleccionarNivel(el){document.querySelectorAll('.tarjeta-nivel').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');nivelSel=el.dataset.nivel;mostrarSelectorPerfil();verificarInicio();}
+function seleccionarNivel(el){document.querySelectorAll('.tarjeta-nivel').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');nivelSel=el.dataset.nivel;verificarInicio();}
 function verificarInicio(){const n=document.getElementById('input-nombre').value.trim();const c=document.getElementById('check-consentimiento').checked;document.getElementById('btn-iniciar').disabled=!(nivelSel&&n.length>=2&&c);}
 
 let tareaActualData=null;
