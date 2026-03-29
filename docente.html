@@ -149,7 +149,26 @@ tbody td{padding:10px 12px;vertical-align:middle;}
 .ia-barra{height:100%;background:linear-gradient(90deg,var(--naranja),#FFD600);border-radius:4px;transition:width .5s;}
 
 @media(max-width:600px){.form-grid{grid-template-columns:1fr;}.stats-grid{grid-template-columns:1fr 1fr;}.analisis-grid{grid-template-columns:1fr;}.rubrica-docente{grid-template-columns:1fr 1fr;}}
-</style>
+
+/* ══ LOGIN MEJORADO ══ */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%);padding:20px;position:relative;overflow:hidden;}
+#login-screen::before{content:'🦉 📚 ✏️ 🌟 📝 🎯 💡 🏔️ 🌊 🌿';position:absolute;font-size:1.5rem;opacity:.05;width:200%;height:200%;display:flex;flex-wrap:wrap;gap:60px;pointer-events:none;animation:loginFondo 20s linear infinite;}
+@keyframes loginFondo{from{transform:translateY(0) rotate(0deg)}to{transform:translateY(-50%) rotate(10deg)}}
+.login-card{background:rgba(255,255,255,.97);border-radius:24px;padding:36px 32px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,.4);text-align:center;position:relative;z-index:1;animation:loginEntrada .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes loginEntrada{from{opacity:0;transform:translateY(30px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.login-card .owl{font-size:4rem;display:block;margin-bottom:8px;animation:owlLoginFloat 3s ease-in-out infinite;}
+@keyframes owlLoginFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+.login-card h1{font-family:'Fredoka One',cursive;font-size:1.9rem;color:var(--naranja);margin-bottom:4px;}
+.login-card .subtitulo{font-size:.82rem;color:var(--texto2);margin-bottom:22px;line-height:1.5;}
+.login-campo{text-align:left;margin-bottom:14px;}
+.login-campo label{display:block;font-weight:800;font-size:.82rem;margin-bottom:5px;color:var(--texto);}
+.login-campo input,.login-campo select{width:100%;padding:12px 14px;border:2px solid #E8E8E8;border-radius:12px;font-size:.92rem;font-family:'Nunito',sans-serif;outline:none;transition:all .2s;background:#FAFAFA;}
+.login-campo input:focus,.login-campo select:focus{border-color:var(--naranja);background:#fff;box-shadow:0 0 0 3px rgba(255,140,0,.12);}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));color:#fff;border:none;border-radius:50px;font-family:'Fredoka One',cursive;font-size:1.2rem;cursor:pointer;margin-top:6px;box-shadow:0 6px 20px rgba(255,140,0,.4);transition:all .3s;animation:btnLoginPulso 2s ease-in-out infinite;}
+@keyframes btnLoginPulso{0%,100%{box-shadow:0 6px 20px rgba(255,140,0,.4)}50%{box-shadow:0 10px 30px rgba(255,140,0,.6)}}
+.btn-login:hover{transform:translateY(-2px) scale(1.02);animation:none;}
+.btn-login:active{transform:scale(.97);}
+.login-footer{margin-top:14px;font-size:.72rem;color:#AAA;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -158,14 +177,29 @@ tbody td{padding:10px 12px;vertical-align:middle;}
   <div class="login-card">
     <span class="owl">🦉</span>
     <h1>Panel Docente</h1>
-    <p>Accede para ver el progreso de tus estudiantes</p>
-    <div class="login-campo"><label>Tu nombre completo</label><input type="text" id="d-nombre" placeholder="Ej: Prof. María González" maxlength="50"></div>
-    <div class="login-campo"><label>Institución educativa</label><input type="text" id="d-institucion" placeholder="Ej: Escuela 24 de Mayo" maxlength="60"></div>
-    <div class="login-campo"><label>Curso / Año</label>
-      <select id="d-curso"><option value="">Selecciona el curso...</option><option>2° EGB</option><option>3° EGB</option><option>4° EGB</option><option>5° EGB</option><option>6° EGB</option><option>7° EGB</option><option>8° EGB</option><option>9° EGB</option><option>10° EGB</option></select>
+    <p class="subtitulo">Bienvenido, Mag. Moreira Bravo<br>Accede para monitorear el progreso de tus estudiantes</p>
+    <div class="login-campo">
+      <label>👤 Tu nombre completo</label>
+      <input type="text" id="d-nombre" placeholder="Ej: Mag. Pedro Moreira Bravo" maxlength="50" onkeypress="if(event.key==='Enter')document.getElementById('d-institucion').focus()">
     </div>
-    <button class="btn-login" onclick="loginDocente()">Entrar al Panel 📊</button>
-    <p style="margin-top:12px;font-size:.73rem;color:#999">Datos guardados de forma segura. Solo tú ves tus estudiantes.</p>
+    <div class="login-campo">
+      <label>🏫 Institución educativa</label>
+      <input type="text" id="d-institucion" placeholder="Ej: U.E. Particular Convento" maxlength="60" onkeypress="if(event.key==='Enter')document.getElementById('d-curso').focus()">
+    </div>
+    <div class="login-campo">
+      <label>📚 Curso / Año</label>
+      <select id="d-curso">
+        <option value="">Selecciona el curso...</option>
+        <option>2° EGB</option><option>3° EGB</option><option>4° EGB</option>
+        <option>5° EGB</option><option selected>6° EGB</option><option>7° EGB</option>
+        <option>8° EGB</option><option>9° EGB</option><option>10° EGB</option>
+      </select>
+    </div>
+    <button class="btn-login" onclick="loginDocente()">📊 Entrar al Panel Docente</button>
+    <div class="login-footer">
+      🔒 Datos protegidos · Solo tú ves tus estudiantes<br>
+      Profesor Búho — Plataforma Educativa con IA · Ecuador 🇪🇨
+    </div>
   </div>
 </div>
 
