@@ -437,7 +437,6 @@ body.modo-oscuro .tab-btn.activo{background:#2A2A3E!important;color:var(--naranj
       <button class="btn-head" onclick="limpiarChat()">🗑️ Limpiar</button>
       <button class="btn-head" onclick="abrirJuegos()">🎮 Juegos</button>
       <button class="btn-head" onclick="despedirse()">👋 Salir</button>
-      <button class="btn-head" onclick="abrirProgreso()">⭐ Progreso</button>
     </div>
   </div>
   <!-- BARRA DE PROGRESO DE SESIÓN -->
@@ -1687,8 +1686,70 @@ window.iniciarMicTrabalenguas=function(btn,textoEsperado){
   rec.start();
 };
 
-// ══ ROMPECABEZAS MEJORADO CON IMÁGENES DE ECUADOR ══
+// ══ ROMPECABEZAS MEJORADO — más piezas, imágenes reales Ecuador ══
 const ROMPECABEZAS_ECUADOR=[
+  {nombre:'🦅 Cóndor andino',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Condor_de_los_Andes.jpg/400px-Condor_de_los_Andes.jpg'},
+  {nombre:'🐢 Tortuga Galápagos',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Galapagos_Giant_Tortoise.jpg/400px-Galapagos_Giant_Tortoise.jpg'},
+  {nombre:'🌋 Volcán Cotopaxi',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Cotopaxi_volcano.jpg/400px-Cotopaxi_volcano.jpg'},
+  {nombre:'🦜 Tucán del Ecuador',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Ramphastos_toco_-Disney_Wild_Animal_Kingdom-8.jpg/400px-Ramphastos_toco_-Disney_Wild_Animal_Kingdom-8.jpg'},
+  {nombre:'🌺 Orquídea ecuatoriana',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Orchid_-_Phalaenopsis_Dragon_Tree_Gold.jpg/400px-Orchid_-_Phalaenopsis_Dragon_Tree_Gold.jpg'},
+  {nombre:'🐠 Pez Galápagos',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/400px-Camponotus_flavomarginatus_ant.jpg'}
+];
+
+function renderRompecabezas(c){
+  const tema=ROMPECABEZAS_ECUADOR[Math.floor(Math.random()*ROMPECABEZAS_ECUADOR.length)];
+  // Nivel según edad — elemental=9 piezas, media=16, superior=25
+  const nivPiezas={elemental:9,media:16,superior:25};
+  const totalPiezas=nivPiezas[nivelSel]||16;
+  const cols=Math.sqrt(totalPiezas);
+  const pW=Math.floor(270/cols);
+  let piezas=Array.from({length:totalPiezas},(_,i)=>i);
+  while(piezas.every((p,i)=>p===i))piezas=piezas.sort(()=>Math.random()-.5);
+  let sel=null,movs=0;
+
+  function renderGrid(){
+    const gr=document.getElementById('rompe-grid');if(!gr)return;
+    gr.style.cssText=`display:grid;grid-template-columns:repeat(${cols},${pW}px);gap:3px;margin:0 auto 10px;width:fit-content`;
+    gr.innerHTML=piezas.map((p,i)=>{
+      const fOrig=Math.floor(p/cols),cOrig=p%cols;
+      const esCor=p===i,esSel=sel===i;
+      const bgX=cOrig*(100/(cols-1)||0)+'%';
+      const bgY=fOrig*(100/(cols-1)||0)+'%';
+      return`<div onclick="clickPieza(${i})" style="
+        width:${pW}px;height:${pW}px;cursor:pointer;border-radius:4px;overflow:hidden;
+        border:3px solid ${esSel?'#FF8C00':esCor?'#2E7D32':'rgba(255,255,255,.3)'};
+        background:url('${tema.url}') no-repeat;
+        background-size:${cols*100}% ${cols*100}%;
+        background-position:${bgX} ${bgY};
+        transition:all .2s;
+        ${esSel?'box-shadow:0 0 0 3px #FF8C00;transform:scale(1.08)':''}
+        ${esCor?'filter:brightness(1.1)':'opacity:.9'}
+      " title="Pieza ${i+1}"></div>`;
+    }).join('');
+    const el=document.getElementById('rompe-movs');if(el)el.textContent='🔄 Movimientos: '+movs;
+    if(piezas.every((p,i)=>p===i)){
+      const msg=document.getElementById('rompe-msg');
+      if(msg){msg.innerHTML='🎊 ¡Completaste "'+tema.nombre+'" en '+movs+' movimientos!';if(typeof lanzarConfetti==='function')lanzarConfetti();}
+    }
+  }
+
+  c.innerHTML=`<h2 style="color:var(--naranja);text-align:center;margin-bottom:4px">🧩 ${tema.nombre}</h2>
+  <p style="text-align:center;color:var(--texto2);font-size:.75rem;margin-bottom:8px">Toca dos piezas para intercambiarlas · ${totalPiezas} piezas</p>
+  <div id="rompe-grid"></div>
+  <div id="rompe-movs" style="text-align:center;font-size:.82rem;color:var(--texto2);margin-bottom:4px">🔄 Movimientos: 0</div>
+  <div id="rompe-msg" style="text-align:center;font-weight:800;font-size:.9rem;min-height:22px;color:var(--verde)"></div>
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+    <button class="btn-juego" style="padding:8px 14px;font-size:.82rem" onclick="renderRompecabezas(document.getElementById('juego-contenido'))">🔀 Nuevo</button>
+  </div>`;
+
+  window.clickPieza=function(i){
+    if(sel===null){sel=i;}
+    else if(sel===i){sel=null;}
+    else{const tmp=piezas[i];piezas[i]=piezas[sel];piezas[sel]=tmp;movs++;sel=null;}
+    renderGrid();
+  };
+  renderGrid();
+}
   {nombre:'🦅 Cóndor andino',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Condor_de_los_Andes.jpg/320px-Condor_de_los_Andes.jpg',color:'#1a1a2e'},
   {nombre:'🐢 Tortuga de Galápagos',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Galapagos_Giant_Tortoise.jpg/320px-Galapagos_Giant_Tortoise.jpg',color:'#1B5E20'},
   {nombre:'🌋 Cotopaxi',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Cotopaxi_volcano.jpg/320px-Cotopaxi_volcano.jpg',color:'#B71C1C'},
@@ -1697,55 +1758,90 @@ const ROMPECABEZAS_ECUADOR=[
   {nombre:'🌺 Orquídea ecuatoriana',url:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Orchid_-_Phalaenopsis_Dragon_Tree_Gold.jpg/320px-Orchid_-_Phalaenopsis_Dragon_Tree_Gold.jpg',color:'#880E4F'}
 ];
 
-function renderRompecabezas(c){
-  const tema=ROMPECABEZAS_ECUADOR[Math.floor(Math.random()*ROMPECABEZAS_ECUADOR.length)];
-  const filas=3,cols=3,total=filas*cols;
-  let piezas=Array.from({length:total},(_,i)=>i);
-  // Mezclar
-  while(piezas.every((p,i)=>p===i))piezas=piezas.sort(()=>Math.random()-.5);
-  let sel=null,movs=0,correctas=0;
-  const pW=100/cols,pH=100/filas;
 
-  function renderGrid(){
-    const grid=document.getElementById('rompe-grid');if(!grid)return;
-    grid.innerHTML=piezas.map((p,i)=>{
-      const fOrig=Math.floor(p/cols),cOrig=p%cols;
-      const esCorrecto=p===i;
-      return`<div onclick="clickPieza(${i})" style="
-        width:90px;height:90px;cursor:pointer;border-radius:8px;overflow:hidden;
-        border:3px solid ${esCorrecto?'var(--verde)':'#E0E0E0'};
-        transition:all .2s;position:relative;
-        background:url('${tema.url}') no-repeat;
-        background-size:${cols*100}% ${filas*100}%;
-        background-position:${cOrig*(100/(cols-1))}% ${fOrig*(100/(filas-1))}%;
-        ${sel===i?'box-shadow:0 0 0 4px var(--naranja);transform:scale(1.05)':''}
-        ${esCorrecto?'filter:brightness(1.1)':''}
-      "></div>`;
-    }).join('');
-    document.getElementById('rompe-movs').textContent='🔄 Movimientos: '+movs;
-    const todas=piezas.every((p,i)=>p===i);
-    if(todas){document.getElementById('rompe-msg').textContent='🎊 ¡Completaste el rompecabezas de '+tema.nombre+'! ¡Excelente!';lanzarConfetti&&lanzarConfetti();}
-  }
-
-  c.innerHTML=`<h2 style="color:var(--naranja);text-align:center;margin-bottom:4px">🧩 Rompecabezas — ${tema.nombre}</h2>
-  <p style="text-align:center;color:var(--texto2);font-size:.78rem;margin-bottom:10px">Toca dos piezas para intercambiarlas. ¡Forma la imagen!</p>
-  <div id="rompe-grid" style="display:grid;grid-template-columns:repeat(${cols},90px);gap:6px;margin:0 auto 10px;width:fit-content"></div>
-  <div id="rompe-movs" style="text-align:center;font-size:.82rem;color:var(--texto2);margin-bottom:4px">🔄 Movimientos: 0</div>
-  <div id="rompe-msg" style="text-align:center;font-weight:800;font-size:.95rem;min-height:22px;color:var(--verde)"></div>
-  <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-    <button class="btn-juego" style="padding:8px 16px;font-size:.85rem" onclick="renderRompecabezas(document.getElementById('juego-contenido'))">🔀 Nuevo</button>
-  </div>`;
-
-  window.clickPieza=function(i){
-    if(sel===null){sel=i;renderGrid();}
-    else if(sel===i){sel=null;renderGrid();}
-    else{const tmp=piezas[i];piezas[i]=piezas[sel];piezas[sel]=tmp;movs++;sel=null;renderGrid();}
-  };
-  renderGrid();
-}
-
-// ══ COLOREAR MEJORADO — animales y elementos del Ecuador ══
+// ══ COLOREAR MEJORADO — SVG dinámico con borrar funcional ══
 function renderColorear(c){
+  const dibujos=[
+    {n:'🦋 Mariposa morpho',svgPaths:[
+      {id:'ala1',d:'M100,100 Q60,40 20,60 Q40,100 100,100'},{id:'ala2',d:'M100,100 Q140,40 180,60 Q160,100 100,100'},
+      {id:'ala3',d:'M100,100 Q50,130 30,160 Q60,165 100,100'},{id:'ala4',d:'M100,100 Q150,130 170,160 Q140,165 100,100'},
+      {id:'patron1',d:'M70,75 Q60,65 55,75 Q60,85 70,75'},{id:'patron2',d:'M130,75 Q140,65 145,75 Q140,85 130,75'}
+    ],extra:'<path d="M97,70 Q100,65 103,70 L105,130 Q100,135 95,130 Z" fill="#5D4037"/><path d="M97,70 Q85,50 75,40 M103,70 Q115,50 125,40" fill="none" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>'},
+    {n:'🐠 Pez tropical',svgPaths:[
+      {id:'cuerpo_pez',d:'M40,100 Q100,60 160,100 Q100,140 40,100'},{id:'aleta_top',d:'M80,70 Q100,50 120,70'},
+      {id:'aleta_der',d:'M130,85 Q155,65 165,100 Q155,115 130,115'},{id:'cola_pez',d:'M40,100 L10,75 L10,125 Z'},
+      {id:'raya1',d:'M90,70 Q90,100 90,130'},{id:'raya2',d:'M110,65 Q110,100 110,135'}
+    ],extra:'<circle cx="135" cy="95" r="6" fill="white"/><circle cx="136" cy="94" r="3" fill="#333"/>'},
+    {n:'🌺 Flor del Ecuador',svgPaths:[
+      {id:'pf1',d:'M100,100 Q85,60 100,25 Q115,60 100,100'},{id:'pf2',d:'M100,100 Q140,85 175,100 Q140,115 100,100'},
+      {id:'pf3',d:'M100,100 Q115,140 100,175 Q85,140 100,100'},{id:'pf4',d:'M100,100 Q60,115 25,100 Q60,85 100,100'},
+      {id:'pf5',d:'M100,100 Q75,70 65,35 Q92,68 100,100'},{id:'pf6',d:'M100,100 Q125,70 135,35 Q108,68 100,100'}
+    ],extra:'<circle cx="100" cy="100" r="20" fill="#FDD835" stroke="#F9A825" stroke-width="2"/><circle cx="100" cy="100" r="8" fill="#FF8F00"/>'},
+    {n:'🦜 Loro amazónico',svgPaths:[
+      {id:'cuerpo_loro',d:'M90,65 Q100,55 110,65 Q120,95 110,135 Q100,145 90,135 Q80,95 90,65'},
+      {id:'ala_izq',d:'M90,85 Q60,95 55,125 Q80,118 90,122'},{id:'ala_der',d:'M110,85 Q140,95 145,125 Q120,118 110,122'},
+      {id:'cabeza_loro',d:'M85,55 Q100,38 115,55 Q115,72 85,72 Z'},{id:'pico_loro',d:'M95,62 Q100,57 105,62 L103,70 Q100,74 97,70 Z'},
+      {id:'cola_loro',d:'M90,135 Q85,165 100,175 Q115,165 110,135'}
+    ],extra:'<circle cx="95" cy="57" r="4" fill="white"/><circle cx="96" cy="56" r="2" fill="#333"/>'},
+    {n:'🐢 Tortuga Galápagos',svgPaths:[
+      {id:'caparazon',d:'M100,60 Q150,60 160,100 Q150,145 100,150 Q50,145 40,100 Q50,60 100,60'},
+      {id:'hex1',d:'M100,75 Q115,75 120,90 Q115,105 100,105 Q85,105 80,90 Q85,75 100,75'},
+      {id:'hex2',d:'M125,85 Q135,90 135,105 Q125,115 115,108'},{id:'hex3',d:'M75,85 Q65,90 65,105 Q75,115 85,108'},
+      {id:'cabeza_t',d:'M100,50 Q110,38 115,50 Q112,62 100,60 Q88,62 85,50 Q90,38 100,50'},
+      {id:'pata1',d:'M70,120 Q55,130 50,145 Q65,140 75,130'},{id:'pata2',d:'M130,120 Q145,130 150,145 Q135,140 125,130'}
+    ],extra:'<ellipse cx="100" cy="155" rx="25" ry="8" fill="#5D4037"/>'}
+  ];
+
+  const d=dibujos[Math.floor(Math.random()*dibujos.length)];
+  const paleta=[
+    '#F44336','#E91E63','#FF8C00','#FFEB3B',
+    '#4CAF50','#2196F3','#9C27B0','#00BCD4',
+    '#FF7043','#795548','#8BC34A','#fff'
+  ];
+  const coloresInicio=['#FFE082','#FFCDD2','#C8E6C9','#BBDEFB','#E1BEE7','#B2EBF2'];
+  window._colorActual='#F44336';
+
+  // Asignar colores iniciales únicos a cada path
+  const svgPaths=d.svgPaths.map((p,i)=>`
+    <path id="cp-${p.id}" d="${p.d}"
+      fill="${coloresInicio[i%coloresInicio.length]}"
+      stroke="#333" stroke-width="2"
+      onclick="colorearSVG(this)"
+      style="cursor:pointer;transition:fill .25s;filter:drop-shadow(0 1px 2px rgba(0,0,0,.1))"
+    />`).join('');
+
+  c.innerHTML=`
+  <h2 style="color:var(--naranja);text-align:center;margin-bottom:4px">🎨 Colorear — ${d.n}</h2>
+  <p style="text-align:center;font-size:.72rem;color:var(--texto2);margin-bottom:8px">Elige un color y toca las partes del dibujo 🖌️</p>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px" id="paleta-wrap">
+    ${paleta.map((col,i)=>`
+      <div class="cpalbtn" data-color="${col}" onclick="
+        window._colorActual='${col}';
+        document.querySelectorAll('.cpalbtn').forEach(b=>b.style.transform='scale(1)');
+        this.style.transform='scale(1.35)';
+      " style="
+        width:34px;height:34px;background:${col};border-radius:50%;cursor:pointer;
+        border:3px solid ${col==='#fff'?'#999':'transparent'};
+        box-shadow:0 2px 6px rgba(0,0,0,.25);transition:.2s;
+        ${i===0?'transform:scale(1.35)':''}
+      "></div>`).join('')}
+  </div>
+  <div style="background:#FAFAFA;border:2px solid #E0E0E0;border-radius:14px;padding:10px;text-align:center">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:250px;display:block;margin:0 auto">
+      ${svgPaths}${d.extra||''}
+    </svg>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+    <button class="btn-juego" style="padding:8px 16px;font-size:.85rem" onclick="renderColorear(document.getElementById('juego-contenido'))">🖌️ Nuevo dibujo</button>
+    <button class="btn-juego" style="background:#E0E0E0;color:var(--texto);padding:8px 16px;font-size:.85rem" onclick="
+      const inicio=${JSON.stringify(coloresInicio)};
+      document.querySelectorAll('#juego-contenido svg path[id^=cp-]').forEach((el,i)=>{
+        el.setAttribute('fill',inicio[i%inicio.length]);
+      });
+    ">🗑️ Borrar</button>
+  </div>`;
+}
+window.colorearSVG=function(el){el.setAttribute('fill',window._colorActual||'#F44336');};
   const dibujos=[
     {n:'🦋 Mariposa morpho',svgPaths:[
       {id:'ala1',d:'M100,100 Q60,40 20,60 Q40,100 100,100',fill:'#E3F2FD'},{id:'ala2',d:'M100,100 Q140,40 180,60 Q160,100 100,100',fill:'#E3F2FD'},
@@ -1798,7 +1894,6 @@ function renderColorear(c){
     <button class="btn-juego" style="background:#E0E0E0;color:var(--texto);padding:8px 16px;font-size:.85rem" onclick="document.querySelectorAll('#juego-contenido path[id]').forEach(e=>e.setAttribute('fill',e.getAttribute('fill').startsWith('#')?e.getAttribute('fill'):'white'))">🗑️ Borrar</button>
   </div>`;
 }
-window.colorearSVG=function(el){el.setAttribute('fill',window._colorActual||'#F44336');};
 
 // ══ SOPA DE LETRAS MEJORADA — colores por dirección, animaciones, palabras curriculares ══
 function renderSopa(c){
@@ -1894,7 +1989,82 @@ window.finalizarSelSopa=function(){
 };
 
 function renderMemoria(c){
-  const datos=getDatosJuegos().memoria;
+  const TEMAS_MEMORIA={
+    animales:{nombre:'🦁 Animales del Ecuador',pares:['🦅','🐢','🦜','🦋','🐠','🦎','🐸','🦟']},
+    naturaleza:{nombre:'🌿 Naturaleza',pares:['🌺','🌋','🏔️','🌊','🌿','🌸','🌴','🍃']},
+    lagunas:{nombre:'💧 Lagunas y volcanes',pares:['🏔️','🌋','💧','🏝️','❄️','🌤️','🌈','⛰️']},
+    frutas:{nombre:'🍎 Frutas de Ecuador',pares:['🍌','🍓','🥝','🍍','🥭','🍇','🫐','🍒']},
+    letras:{nombre:'📖 Letras y palabras',pares:['📖','✏️','📝','🔤','📚','🎯','💡','🦉']},
+    emociones:{nombre:'😊 Emociones',pares:['😊','😂','🥰','😎','🤔','😴','🥳','😮']}
+  };
+
+  // Mostrar selección de tema
+  c.innerHTML=`
+  <h2 style="color:var(--naranja);text-align:center;margin-bottom:8px">🃏 Memoria — Elige un tema</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+    ${Object.entries(TEMAS_MEMORIA).map(([k,t])=>`
+      <button onclick="iniciarMemoria('${k}')" style="
+        background:linear-gradient(135deg,var(--naranja-cl),#FFF3E0);
+        border:2px solid var(--naranja);border-radius:14px;
+        padding:12px;cursor:pointer;font-family:'Nunito',sans-serif;
+        font-weight:800;font-size:.85rem;color:var(--texto);
+        transition:all .2s;text-align:center;
+      " onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+        ${t.nombre}
+        <div style="font-size:.72rem;color:var(--texto2);margin-top:3px">${t.pares.slice(0,4).join(' ')}...</div>
+      </button>`).join('')}
+  </div>`;
+
+  window.iniciarMemoria=function(temaKey){
+    const t=TEMAS_MEMORIA[temaKey];
+    const pares=[...t.pares,...t.pares].sort(()=>Math.random()-.5);
+    let int=0,par=0,pri=null,seg=null,bloq=false;
+    c.innerHTML=`
+    <h2 style="color:var(--naranja);text-align:center;margin-bottom:6px">🃏 ${t.nombre}</h2>
+    <div id="mem-info" style="text-align:center;margin-bottom:10px;font-weight:700;color:var(--texto2)">¡Encuentra los ${t.pares.length} pares!</div>
+    <div class="memoria-grid" id="mem-grid" style="grid-template-columns:repeat(4,1fr);gap:8px"></div>
+    <div id="mem-res" style="text-align:center;font-weight:800;font-size:1rem;margin-top:10px;color:var(--verde)"></div>
+    <button class="btn-juego" style="background:#E0E0E0;color:var(--texto);margin-top:8px;width:100%;padding:8px" onclick="renderMemoria(document.getElementById('juego-contenido'))">🔙 Cambiar tema</button>`;
+
+    const gr=document.getElementById('mem-grid');
+    pares.forEach(em=>{
+      const card=document.createElement('div');
+      card.className='mem-card';card.dataset.emoji=em;
+      card.innerHTML='<span style="font-size:1.5rem">❓</span>';
+      card.style.cssText='height:65px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:linear-gradient(135deg,var(--naranja),var(--naranja2));transition:all .4s;box-shadow:0 3px 8px rgba(0,0,0,.15);';
+      card.onclick=function(){
+        if(bloq||this.classList.contains('volteada')||this.classList.contains('par-ok'))return;
+        this.innerHTML=`<span>${em}</span>`;
+        this.style.background='#fff';this.style.border='2px solid var(--naranja)';
+        this.classList.add('volteada');
+        if(!pri){pri=this;return;}
+        seg=this;bloq=true;int++;
+        document.getElementById('mem-info').textContent='Intentos: '+int+' · Pares: '+par+'/'+t.pares.length;
+        if(pri.dataset.emoji===seg.dataset.emoji){
+          pri.classList.add('par-ok');seg.classList.add('par-ok');
+          pri.style.background='linear-gradient(135deg,var(--verde-cl),#A5D6A7)';
+          seg.style.background='linear-gradient(135deg,var(--verde-cl),#A5D6A7)';
+          par++;pri=null;seg=null;bloq=false;
+          if(par===t.pares.length){
+            document.getElementById('mem-res').textContent='🎊 ¡Completaste '+t.nombre+' en '+int+' intentos!';
+            if(typeof lanzarConfetti==='function')lanzarConfetti();
+          }
+        }else{
+          setTimeout(()=>{
+            pri.innerHTML='<span style="font-size:1.5rem">❓</span>';
+            seg.innerHTML='<span style="font-size:1.5rem">❓</span>';
+            pri.style.background='linear-gradient(135deg,var(--naranja),var(--naranja2))';
+            seg.style.background='linear-gradient(135deg,var(--naranja),var(--naranja2))';
+            pri.style.border='none';seg.style.border='none';
+            pri.classList.remove('volteada');seg.classList.remove('volteada');
+            pri=null;seg=null;bloq=false;
+          },900);
+        }
+      };
+      gr.appendChild(card);
+    });
+  };
+}
   const pares=[...datos.pares,...datos.pares].sort(()=>Math.random()-.5);
   let int=0,par=0,pri=null,seg=null,bloq=false;
   c.innerHTML=`<h2 style="color:var(--naranja);text-align:center;margin-bottom:8px">🃏 Memoria</h2>
