@@ -611,6 +611,160 @@ const MAPA_CURRICULAR = {
   }
 };
 
+
+// ══════════════════════════════════════════════════════════════════
+// KNOWLEDGE TRACING ENGINE v2.0 — Profesor Búho
+// Basado en: Bayesian Knowledge Tracing (Corbett & Anderson, 1995)
+// Simplificado para contexto curricular MINED Ecuador
+// Stanford LAK'25: 2-5 hrs de datos predicen desempeño de fin de año
+// ══════════════════════════════════════════════════════════════════
+
+// Mapeo DCD → criterios de rúbrica que los evalúan
+const DCD_RUBRICA_MAP={
+  'LL.2.4.1':['ortografia','coherencia'],
+  'LL.2.4.4':['creatividad','presentacion'],
+  'LL.2.4.7':['coherencia','presentacion'],
+  'LL.3.1.2':['ortografia'],
+  'LL.3.1.3':['puntuacion','ortografia'],
+  'LL.3.4.2':['cohesion','sintaxis'],
+  'LL.3.4.6':['coherencia','cohesion','vocabulario'],
+  'LL.3.4.12':['vocabulario','registro'],
+  'LL.4.4.1':['ortografia','puntuacion'],
+  'LL.4.4.6':['coherencia','argumentacion'],
+  'LL.4.4.8':['registro','argumentacion']
+};
+
+// Pesos BKT — ajustables con datos reales post-piloto
+const KT_ALPHA=0.85; // peso del historial (memoria del sistema)
+const KT_BETA =0.15; // peso de la observación actual
+const KT_MIN_OBS=3;  // mínimo de obs. para activar priorización
+
+// Normaliza puntaje 1-5 → probabilidad 0-1
+function ktNormalizar(pts,max=5){return Math.max(0,Math.min(1,(pts-1)/(max-1)));}
+
+// Puntaje promedio de los criterios relevantes para un DCD
+function ktPuntajePorDCD(dcd,rubricaObj){
+  const criterios=DCD_RUBRICA_MAP[dcd];
+  if(!criterios||!rubricaObj)return null;
+  const vals=criterios.filter(c=>rubricaObj[c]!==undefined).map(c=>ktNormalizar(rubricaObj[c]));
+  if(vals.length===0)return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+
+// BKT: actualiza P(dominio) con nueva observación
+function ktActualizarBKT(dominioAnterior,puntajeNorm,nObs){
+  if(nObs<KT_MIN_OBS)return puntajeNorm; // promedio simple en arranque
+  return KT_ALPHA*dominioAnterior+KT_BETA*puntajeNorm;
+}
+
+// Tendencia basada en últimas 3 observaciones del historial
+function ktTendencia(historialDCD){
+  if(!historialDCD||historialDCD.length<2)return 'nuevo';
+  const ultimos=historialDCD.slice(-3);
+  const delta=ultimos[ultimos.length-1].dominioPost-ultimos[0].dominioPost;
+  if(delta>0.08)return 'subiendo';
+  if(delta<-0.08)return 'bajando';
+  return 'estable';
+}
+
+// ID único del estudiante para Firebase
+function ktEstudianteId(nombre,nivel,institucion){
+  return ((nombre||'anonimo')+'_'+(nivel||'media')+'_'+(institucion||'libre'))
+    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9_]/g,'_').slice(0,60);
+}
+
+// Retorna escala MINED según dominio
+function ktEtiqueta(p){
+  if(p>=0.90)return{label:'Domina (DAR)',color:'#1D9E75'};
+  if(p>=0.70)return{label:'Alcanza (AAR)',color:'#97C459'};
+  if(p>=0.40)return{label:'Próximo (PAR)',color:'#EF9F27'};
+  return{label:'No alcanza (NAR)',color:'#E24B4A'};
+}
+
+// Semana del año lectivo (desde agosto) — para serie temporal
+function ktSemana(){
+  const inicio=new Date(new Date().getFullYear(),7,1);
+  return Math.max(1,Math.ceil((new Date()-inicio)/(7*24*60*60*1000)));
+}
+
+// DCD con menor dominio (mayor necesidad de refuerzo)
+function ktDCDPrioritario(dominios,dcdsActivos){
+  const candidatos=dcdsActivos
+    .filter(d=>dominios[d]&&dominios[d].obs>=KT_MIN_OBS)
+    .map(d=>({dcd:d,dominio:dominios[d].dominio}))
+    .sort((a,b)=>a.dominio-b.dominio);
+  return candidatos.length>0?candidatos[0]:null;
+}
+
+// ── FUNCIÓN PRINCIPAL: actualiza kt_perfiles y kt_historial en Firebase ──
+window.actualizarKnowledgeTracing=async function(rubricaObj,modo,nivel){
+  if(!rubricaObj||!db)return null;
+  const mapa=MAPA_CURRICULAR[nivel||'media'];
+  if(!mapa)return null;
+  const dcdsActivos=mapa.dcd.split(' — ').map(d=>d.trim());
+  const estId=ktEstudianteId(progreso.nombre||'anonimo',nivel||'media',progreso.institucion||'libre');
+  try{
+    const{doc,getDoc,setDoc,arrayUnion,serverTimestamp}=
+      await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const perfilRef=doc(db,'kt_perfiles',estId);
+    const snap=await getDoc(perfilRef);
+    const perfil=snap.exists()?snap.data():{
+      estudianteId:estId,nombre:progreso.nombre||'Estudiante',nivel,
+      totalObservaciones:0,dominios:{}
+    };
+    const dominios={...perfil.dominios};
+    const registros=[];
+    const fechaHoy=new Date().toISOString().split('T')[0];
+    const semana=ktSemana();
+    for(const dcd of dcdsActivos){
+      const puntaje=ktPuntajePorDCD(dcd,rubricaObj);
+      if(puntaje===null)continue;
+      const prev=dominios[dcd]||{dominio:0.5,obs:0,tendencia:'nuevo'};
+      const nuevoDom=ktActualizarBKT(prev.dominio,puntaje,prev.obs);
+      dominios[dcd]={
+        dominio:Math.round(nuevoDom*1000)/1000,
+        obs:prev.obs+1,
+        tendencia:'calculando',
+        ultimaFecha:fechaHoy
+      };
+      registros.push({fecha:fechaHoy,semana,dcd,
+        puntaje:Math.round(puntaje*100)/100,
+        dominioPost:Math.round(nuevoDom*1000)/1000,
+        modo:modo||'revisar'});
+    }
+    // Guardar perfil
+    await setDoc(perfilRef,{
+      ...perfil,dominios,
+      totalObservaciones:(perfil.totalObservaciones||0)+1,
+      ultimaActualizacion:serverTimestamp(),
+      docenteId:window.docenteId||'libre',
+      institucion:progreso.institucion||'',
+      paralelo:progreso.paralelo||''
+    });
+    // Guardar historial (serie temporal — NO borrar, es evidencia científica)
+    if(registros.length>0){
+      const histRef=doc(db,'kt_historial',estId);
+      await setDoc(histRef,{estudianteId:estId,registros:arrayUnion(...registros)},{merge:true});
+      // Recalcular tendencias con historial actualizado
+      const histSnap=await getDoc(histRef);
+      if(histSnap.exists()){
+        const hist=histSnap.data().registros||[];
+        for(const dcd of dcdsActivos){
+          if(!dominios[dcd])continue;
+          const histDCD=hist.filter(r=>r.dcd===dcd).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+          dominios[dcd].tendencia=ktTendencia(histDCD);
+        }
+        await setDoc(perfilRef,{dominios},{merge:true});
+      }
+    }
+    const dcdPrio=ktDCDPrioritario(dominios,dcdsActivos);
+    window._ktDCDPrioritario=dcdPrio;
+    console.log('[KT v2.0] Perfil actualizado:',dominios,'| DCD prioritario:',dcdPrio);
+    return{dominios,dcdPrioritario:dcdPrio,estudianteId:estId};
+  }catch(e){console.log('[KT] Error:',e);return null;}
+};
+
 // ══ NEUROEDUCACIÓN: principios aplicados ══
 // 1. Aprendizaje desde la emoción (LeDoux) — siempre empezar con conexión emocional
 // 2. Dopamina y recompensa inmediata — celebrar logros en el momento
@@ -1038,6 +1192,12 @@ function registrarAccion(tipo,txt,rubricaObj){
   if(progreso.textosRevisados===1||progreso.textosRevisados===5||progreso.textosRevisados===10)lanzarConfetti();
   if(rubricaObj&&Object.values(rubricaObj).every(v=>v>=4))lanzarConfetti();
   if(typeof window.fbActualizarProgreso==='function')window.fbActualizarProgreso({textosRevisados:progreso.textosRevisados,erroresCorregidos:progreso.erroresCorregidos,cuentosCreados:progreso.cuentosCreados,juegosJugados:progreso.juegosJugados||0});
+  // ── KT v2.0: actualizar perfil de dominio por DCD ──
+  if(rubricaObj&&typeof window.actualizarKnowledgeTracing==='function'){
+    window.actualizarKnowledgeTracing(rubricaObj,tipo,nivelSel||'media')
+      .then(r=>{if(r)console.log('[KT] DCD prioritario siguiente:',r.dcdPrioritario);})
+      .catch(e=>console.log('[KT] Error silencioso:',e));
+  }
 }
 
 function verificarInsignias(){INSIGNIAS_DEF.forEach(ins=>{if(!progreso.insignias.includes(ins.id)&&ins.condicion(progreso)){progreso.insignias.push(ins.id);mostrarNotifInsignia(ins);}});}
@@ -1408,7 +1568,16 @@ async function consultarGroq(textoUsuario,archivo){
     })()
     +'\n\n=== SEGURIDAD ==='
     +'\nFECHA ACTUAL HOY: '+_fechaHoy+'. Si preguntan la fecha o el año, responde con esta fecha. NUNCA menciones 2024.'
-    +'\nSolo responde sobre escritura, lectura, ortografía, gramática y literatura. Si el tema es inapropiado sin contexto educativo, redirige amablemente a la escritura.';
+    +'\nSolo responde sobre escritura, lectura, ortografía, gramática y literatura. Si el tema es inapropiado sin contexto educativo, redirige amablemente a la escritura.'
+    +(window._ktDCDPrioritario
+      ?'\n\n=== KNOWLEDGE TRACING — PRIORIDAD PEDAGÓGICA ==='
+        +'\nAnálisis de dominio curricular indica que el DCD con MENOR dominio del estudiante es: '
+        +window._ktDCDPrioritario.dcd
+        +' (dominio actual: '+Math.round(window._ktDCDPrioritario.dominio*100)+'%)'
+        +'\nPRIORIZA tu retroalimentación de hoy en ese DCD específico.'
+        +'\nSi el texto actual tiene errores relacionados con ese DCD, señálalos primero.'
+        +'\nSi el texto está bien en ese DCD, celébralo explícitamente y pide que lo practique de nuevo.'
+      :'');
   const mensajes=[{role:'system',content:system}];
   historial.forEach(h=>mensajes.push({role:h.role==='model'?'assistant':'user',content:h.content||''}));
   let contenido;
@@ -1420,12 +1589,38 @@ async function consultarGroq(textoUsuario,archivo){
   const data=await resp.json();
   const tx=data.choices?.[0]?.message?.content;
   if(!tx)throw new Error('Respuesta vacía');
-  historial.push({role:'user',content:textoUsuario||''});historial.push({role:'model',content:tx});
+  const txFiltrado=filtrarOutputIA(tx, typeof sesionId!=='undefined'?sesionId:null);
+  historial.push({role:'user',content:textoUsuario||''});historial.push({role:'model',content:txFiltrado});
   if(historial.length>20)historial=historial.slice(-16);
-  return tx;
+  return txFiltrado;
 }
 
 const PALABRAS_INAPROPIADAS=['porno','cocain','marihuan','fuck','shit','mierda','puta','puto','nazi','terroris','desnud'];
+
+// ── FILTRO DE OUTPUT DE LA IA (respuesta ANTES de mostrar al estudiante) ──
+const PALABRAS_PELIGROSAS_OUTPUT=['suicid','matar','morir sin vivir','quiero morir','arma','pistol','droga','alcohol','sexual','desnud','violen','sangre','terror','bomba','hacerse daño'];
+function filtrarOutputIA(textoIA, sesId){
+  if(!textoIA) return textoIA;
+  const min=textoIA.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const detectado=PALABRAS_PELIGROSAS_OUTPUT.some(p=>min.includes(p));
+  if(detectado){
+    registrarIncidenteIA(textoIA, sesId);
+    return '🦉 Mmm, creo que eso es mejor conversarlo con tu profe. ¿Seguimos con tu texto?';
+  }
+  return textoIA;
+}
+async function registrarIncidenteIA(textoIA, sesId){
+  try{
+    if(typeof db!=='undefined' && sesId){
+      const {addDoc,collection,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+      await addDoc(collection(db,'incidentes_ia'),{
+        sesionId:sesId, textoIA:textoIA.slice(0,500),
+        timestamp:serverTimestamp(), revisado:false,
+        nombreEstudiante:window._nombreEstudiante||'desconocido'
+      });
+    }
+  }catch(e){console.log('Error registrando incidente IA:',e);}
+}
 // Señales de alerta social — NO bloquear, responder con empatía y notificar docente
 const ALERTAS_SOCIALES=['me pegan','me golpean','me lastiman','tengo miedo','nadie me quiere','quiero morirme','me odio','me hacen daño','no quiero vivir','me abusan','me tocan','me gritan','estoy solo','me ignoran','me bullyng','me hacen bullying','me amenazan'];
 
