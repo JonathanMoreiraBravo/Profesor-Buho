@@ -248,6 +248,7 @@ tbody td{padding:10px 12px;vertical-align:middle;}
       <button class="btn-hdr" style="background:rgba(0,230,118,.25);border:1.5px solid #00E676" onclick="abrirModalEstudiantes()">👤 Ingresar Estudiante</button>
       <button class="btn-hdr" onclick="abrirModalReporteInd()">📋 Reporte Individual</button>
       <button class="btn-hdr" onclick="abrirModalReporte()">📊 Reporte Grupal</button>
+      <button class="btn-hdr" onclick="abrirModalKT()" style="background:rgba(123,97,255,.25);border-color:rgba(123,97,255,.5)">🧠 KT Dominio</button>
       <button class="btn-hdr" onclick="exportarCSV()">📥 CSV</button>
       <button class="btn-hdr" onclick="cerrarSesionDocente()">Salir</button>
     </div>
@@ -2127,6 +2128,205 @@ function generarHTMLReporte(){
     Generado por Profesor Búho · ${hoy} · Basado en Currículo Nacional MINEDUC Ecuador 2016
   </div></div>`;
 }
+
+
+// ── Abrir / cerrar modal KT ──
+function abrirModalKT(){
+  document.getElementById('modal-kt').style.display='block';
+  document.body.style.overflow='hidden';
+  cargarMapaCalorKT();
+}
+function cerrarModalKT(){
+  document.getElementById('modal-kt').style.display='none';
+  document.body.style.overflow='';
+}
+// Cerrar modal KT al hacer clic fuera
+document.addEventListener('click',function(e){
+  const modal=document.getElementById('modal-kt');
+  if(modal&&e.target===modal){cerrarModalKT();}
+});
+
+// ══════════════════════════════════════════════════════════════════
+// KNOWLEDGE TRACING — Panel Docente v2.0
+// Mapa de calor DCD × Estudiante + Alertas de riesgo
+// ══════════════════════════════════════════════════════════════════
+
+function ktEtiquetaDocente(p){
+  if(p>=0.90)return{label:'DAR',bg:'#E8F5E9',col:'#2E7D32',flecha:'↑'};
+  if(p>=0.70)return{label:'AAR',bg:'#F1F8E9',col:'#558B2F',flecha:'→'};
+  if(p>=0.40)return{label:'PAR',bg:'#FFF8E1',col:'#F57F17',flecha:'→'};
+  return{label:'NAR',bg:'#FFEBEE',col:'#C62828',flecha:'↓'};
+}
+
+const KT_NOMBRES_DCD={
+  'LL.2.4.1':'Ortografía',
+  'LL.2.4.4':'Creatividad',
+  'LL.2.4.7':'Coherencia',
+  'LL.3.1.2':'Ortografía',
+  'LL.3.1.3':'Puntuación',
+  'LL.3.4.2':'Gramática',
+  'LL.3.4.6':'Escritura proc.',
+  'LL.3.4.12':'Vocabulario',
+  'LL.4.4.1':'Ortografía BGU',
+  'LL.4.4.6':'Coherencia BGU',
+  'LL.4.4.8':'Registro BGU'
+};
+
+const KT_DCDS_MEDIA=['LL.3.1.2','LL.3.1.3','LL.3.4.2','LL.3.4.6','LL.3.4.12'];
+const KT_DCDS_ELEMENTAL=['LL.2.4.1','LL.2.4.4','LL.2.4.7'];
+const KT_DCDS_SUPERIOR=['LL.4.4.1','LL.4.4.6','LL.4.4.8'];
+
+async function cargarMapaCalorKT(){
+  const contenedor=document.getElementById('kt-mapa-contenedor');
+  if(!contenedor)return;
+  contenedor.innerHTML='<p style="color:#888;text-align:center;padding:20px">Cargando perfiles KT...</p>';
+  try{
+    const{collection,query,where,getDocs}=
+      await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const q=query(collection(db,'kt_perfiles'),where('docenteId','==',docenteId));
+    const snap=await getDocs(q);
+    if(snap.empty){
+      contenedor.innerHTML='<p style="color:#888;text-align:center;padding:20px">'+
+        'Sin datos de Knowledge Tracing aún.<br><small>Los perfiles se generan automáticamente cuando los estudiantes usan la plataforma.</small></p>';
+      return;
+    }
+    const estudiantes=snap.docs.map(d=>d.data()).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+    // Determinar DCDs predominantes del grupo
+    const nivelesGrupo=[...new Set(estudiantes.map(e=>e.nivel||'media'))];
+    let dcds=KT_DCDS_MEDIA;
+    if(nivelesGrupo.includes('elemental'))dcds=[...new Set([...KT_DCDS_ELEMENTAL,...dcds])];
+    if(nivelesGrupo.includes('superior'))dcds=[...new Set([...dcds,...KT_DCDS_SUPERIOR])];
+
+    // Calcular estadísticas del grupo
+    let enRiesgo=[];
+    let promedioGrupo={};
+    dcds.forEach(dcd=>{
+      const vals=estudiantes.filter(e=>e.dominios&&e.dominios[dcd]&&e.dominios[dcd].obs>=3)
+                            .map(e=>e.dominios[dcd].dominio);
+      promedioGrupo[dcd]=vals.length>0?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+    });
+
+    // Construir HTML del mapa de calor
+    let html='';
+
+    // Alertas de riesgo al tope
+    estudiantes.forEach(est=>{
+      if(!est.dominios)return;
+      const tieneNAR=dcds.some(dcd=>est.dominios[dcd]&&est.dominios[dcd].obs>=3&&est.dominios[dcd].dominio<0.40);
+      if(tieneNAR)enRiesgo.push(est.nombre);
+    });
+    if(enRiesgo.length>0){
+      html+=`<div style="background:#FFEBEE;border-left:4px solid #C62828;padding:12px 16px;margin-bottom:14px;border-radius:0 8px 8px 0">
+        <strong style="color:#C62828">⚠ Estudiantes en nivel NAR (requieren atención inmediata):</strong>
+        <div style="margin-top:6px;font-size:13px;color:#B71C1C">${enRiesgo.join(' · ')}</div>
+        <div style="font-size:11px;color:#888;margin-top:4px">Criterio: dominio &lt;40% con ≥3 observaciones en algún DCD</div>
+      </div>`;
+    }
+
+    // Promedio del grupo
+    html+=`<div style="background:#E3F2FD;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px">
+      <strong style="color:#1565C0">📊 Promedio del grupo por DCD:</strong>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        ${dcds.map(dcd=>{
+          const avg=promedioGrupo[dcd];
+          if(avg===null)return `<span style="background:#F5F5F5;color:#999;padding:4px 10px;border-radius:20px;font-size:11px">${KT_NOMBRES_DCD[dcd]||dcd}: —</span>`;
+          const{label,col}=ktEtiquetaDocente(avg);
+          return `<span style="background:${ktEtiquetaDocente(avg).bg};color:${col};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">
+            ${KT_NOMBRES_DCD[dcd]||dcd}: ${Math.round(avg*100)}% (${label})</span>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+    // Tabla principal — mapa de calor
+    html+=`<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">
+      <thead>
+        <tr style="background:#F5F5F5">
+          <th style="text-align:left;padding:10px 12px;border-bottom:2px solid #E0E0E0;white-space:nowrap">Estudiante</th>
+          ${dcds.map(dcd=>`<th style="padding:10px 8px;border-bottom:2px solid #E0E0E0;text-align:center;white-space:nowrap">
+            <div>${KT_NOMBRES_DCD[dcd]||dcd}</div>
+            <div style="font-size:10px;color:#888;font-weight:400">${dcd}</div>
+          </th>`).join('')}
+          <th style="padding:10px 8px;border-bottom:2px solid #E0E0E0;text-align:center">Prioridad IA</th>
+          <th style="padding:10px 8px;border-bottom:2px solid #E0E0E0;text-align:center">Obs.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${estudiantes.map((est,idx)=>{
+          const dominios=est.dominios||{};
+          // Calcular DCD prioritario (menor dominio con ≥3 obs)
+          let minDom=1,dcdMin='—',nomMin='—';
+          dcds.forEach(dcd=>{
+            const d=dominios[dcd];
+            if(d&&d.obs>=3&&d.dominio<minDom){minDom=d.dominio;dcdMin=dcd;nomMin=KT_NOMBRES_DCD[dcd]||dcd;}
+          });
+          const esRiesgo=enRiesgo.includes(est.nombre);
+          return `<tr style="background:${idx%2===0?'#fff':'#FAFAFA'};${esRiesgo?'border-left:3px solid #C62828':''}">
+            <td style="padding:10px 12px;font-weight:500;border-bottom:0.5px solid #F0F0F0;white-space:nowrap">
+              ${esRiesgo?'⚠ ':''}${est.nombre}
+              <div style="font-size:10px;color:#888">${est.nivel||'media'} · ${est.paralelo||'—'}</div>
+            </td>
+            ${dcds.map(dcd=>{
+              const d=dominios[dcd];
+              if(!d||d.obs<1)return`<td style="padding:10px 8px;text-align:center;border-bottom:0.5px solid #F0F0F0;color:#CCC;font-size:11px">—</td>`;
+              const pct=Math.round(d.dominio*100);
+              const{label,bg,col}=ktEtiquetaDocente(d.dominio);
+              const flechaTend=d.tendencia==='subiendo'?'↑':d.tendencia==='bajando'?'↓':'→';
+              const opacidad=d.obs<3?'opacity:.6':'';
+              return `<td style="padding:8px;text-align:center;border-bottom:0.5px solid #F0F0F0">
+                <span style="background:${bg};color:${col};padding:4px 8px;border-radius:6px;font-weight:600;font-size:12px;display:inline-block;${opacidad}">
+                  ${pct}% ${flechaTend}
+                </span>
+                ${d.obs<3?`<div style="font-size:9px;color:#999">${d.obs} obs.</div>`:''}
+              </td>`;
+            }).join('')}
+            <td style="padding:10px 8px;text-align:center;border-bottom:0.5px solid #F0F0F0">
+              <span style="font-size:11px;color:#1565C0;background:#E3F2FD;padding:3px 8px;border-radius:12px">${nomMin}</span>
+            </td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:0.5px solid #F0F0F0;color:#888;font-size:11px">
+              ${est.totalObservaciones||0}
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+    <div style="font-size:11px;color:#999;margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
+      <span>Escala: <strong style="color:#2E7D32">DAR ≥90%</strong> · <strong style="color:#558B2F">AAR 70–89%</strong> · <strong style="color:#F57F17">PAR 40–69%</strong> · <strong style="color:#C62828">NAR &lt;40%</strong></span>
+      <span style="color:#BBB">·</span>
+      <span>↑ mejorando  →  estable  ↓ bajando  (mín. 3 obs. para estabilidad)</span>
+    </div>`;
+
+    contenedor.innerHTML=html;
+  }catch(e){
+    console.log('[KT Docente] Error:',e);
+    contenedor.innerHTML='<p style="color:#C62828">Error cargando perfiles KT: '+e.message+'</p>';
+  }
+}
+
 </script>
+
+<!-- MODAL KT — Mapa de Calor Knowledge Tracing -->
+<div id="modal-kt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;padding:16px;overflow-y:auto">
+  <div style="background:#fff;border-radius:16px;max-width:900px;margin:0 auto;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(135deg,#7B61FF,#4A3ADB);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h2 style="color:#fff;font-size:1.1rem;font-weight:700;margin:0">🧠 Knowledge Tracing — Mapa de Dominio Curricular</h2>
+        <p style="color:rgba(255,255,255,.8);font-size:.75rem;margin:3px 0 0">Nivel de dominio por DCD · Actualizado en tiempo real · v2.0</p>
+      </div>
+      <button onclick="cerrarModalKT()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.85rem">✕ Cerrar</button>
+    </div>
+    <div style="padding:20px">
+      <div style="background:#EDE9FF;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#4A3ADB">
+        <strong>¿Qué es esto?</strong> Cada celda muestra el nivel de dominio del estudiante en cada Destreza con Criterio de Desempeño (DCD),
+        calculado con Bayesian Knowledge Tracing basado en todas sus evaluaciones. La columna "Prioridad IA" indica el DCD que
+        la IA priorizará en la próxima sesión del estudiante.
+      </div>
+      <div id="kt-mapa-contenedor">
+        <p style="color:#888;text-align:center;padding:30px">Cargando...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
