@@ -248,7 +248,7 @@ tbody td{padding:10px 12px;vertical-align:middle;}
       <button class="btn-hdr" style="background:rgba(0,230,118,.25);border:1.5px solid #00E676" onclick="abrirModalEstudiantes()">👤 Ingresar Estudiante</button>
       <button class="btn-hdr" onclick="abrirModalReporteInd()">📋 Reporte Individual</button>
       <button class="btn-hdr" onclick="abrirModalReporte()">📊 Reporte Grupal</button>
-      <button class="btn-hdr" onclick="abrirModalKT()" style="background:rgba(123,97,255,.25);border-color:rgba(123,97,255,.5)">🧠 KT Dominio</button>
+      <button class="btn-hdr" onclick="abrirModalKT()" style="background:#7B61FF;border:1.5px solid #5B41DF;color:#fff;font-weight:800">🧠 KT Dominio</button>
       <button class="btn-hdr" onclick="exportarCSV()">📥 CSV</button>
       <button class="btn-hdr" onclick="cerrarSesionDocente()">Salir</button>
     </div>
@@ -394,6 +394,8 @@ tbody td{padding:10px 12px;vertical-align:middle;}
         </div>
       </div>
       <button class="btn-agregar-est" onclick="agregarEstudianteForm()">➕ Agregar estudiante</button>
+      <button onclick="verTodosEstudiantes()" style="background:#1565C0;color:#fff;border:none;padding:10px 16px;border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;margin-left:6px">👥 Ver todos</button>
+      <button onclick="limpiarDuplicadosFirebase()" style="background:#E65100;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;margin-left:6px" title="Eliminar duplicados en Firebase">🧹 Sin duplicados</button>
       <!-- LISTA -->
       <div class="lista-estudiantes-reg" id="lista-est-reg" style="display:none"></div>
       <button class="btn-guardar-lista" onclick="guardarListaEstudiantes()">✅ Guardar lista de estudiantes</button>
@@ -1803,13 +1805,28 @@ window.selPerfilEst=function(val,btn){
 window.agregarEstudianteForm=function(){
   const nom=document.getElementById('est-nombres').value.trim();
   const ape=document.getElementById('est-apellidos').value.trim();
-  if(!nom||!ape){mostrarNotif('Ingresa nombre y apellido');return;}
-  if(listaEstudiantes.length>=40){mostrarNotif('Máximo 40 estudiantes');return;}
+  const ced=document.getElementById('est-cedula').value.trim();
+  if(!nom||!ape){mostrarNotif('⚠️ Ingresa nombre y apellido');return;}
+  if(listaEstudiantes.length>=40){mostrarNotif('⚠️ Máximo 40 estudiantes');return;}
+  // ── Detección de duplicados ──
+  const nombreCompleto=(ape+' '+nom).toLowerCase().trim();
+  const yaExisteNombre=listaEstudiantes.some(e=>
+    e.nombreCompleto.toLowerCase()===nombreCompleto
+  );
+  if(yaExisteNombre){
+    mostrarNotif('⚠️ '+ape+' '+nom+' ya está en la lista');return;
+  }
+  if(ced){
+    const yaExisteCedula=listaEstudiantes.some(e=>e.cedula&&e.cedula===ced);
+    if(yaExisteCedula){
+      mostrarNotif('⚠️ Ya existe un estudiante con CI '+ced);return;
+    }
+  }
   const est={
     id:'est_'+Date.now(),
     nombres:nom, apellidos:ape,
     nombreCompleto:ape+' '+nom,
-    cedula:document.getElementById('est-cedula').value.trim(),
+    cedula:ced,
     grado:document.getElementById('est-grado').value,
     paralelo:document.getElementById('est-paralelo').value.trim(),
     institucion:document.getElementById('est-institucion2').value.trim()||docenteInstitucion,
@@ -1817,7 +1834,6 @@ window.agregarEstudianteForm=function(){
     perfil:perfilEstForm
   };
   listaEstudiantes.push(est);
-  // Limpiar campos para el siguiente
   ['est-nombres','est-apellidos','est-cedula','est-paralelo'].forEach(id=>document.getElementById(id).value='');
   renderListaEstReg();
   mostrarNotif('✅ '+est.nombreCompleto+' agregado');
@@ -1826,45 +1842,102 @@ window.agregarEstudianteForm=function(){
 function renderListaEstReg(){
   const lista=document.getElementById('lista-est-reg');
   const cont=document.getElementById('est-contador');
+  // Detectar duplicados visualmente
+  const nombres=listaEstudiantes.map(e=>e.nombreCompleto.toLowerCase());
+  const cedulas=listaEstudiantes.map(e=>e.cedula||'').filter(c=>c);
   cont.textContent=listaEstudiantes.length+' / 40 estudiantes registrados';
   if(listaEstudiantes.length===0){lista.style.display='none';return;}
   lista.style.display='block';
   const PERFIL_ICON={ninguno:'👤',lector:'📖',atencion:'⚡',comunicacion:'🧩',visual:'👁️',apoyo:'🤝'};
   const REGION_LABEL={'sierra-amazonia':'🏔️🌿 Sierra/Amazonía','costa-galapagos':'🌊🐢 Costa/Galápagos'};
-  lista.innerHTML=listaEstudiantes.map((e,i)=>`
-    <div class="est-reg-item">
-      <div class="est-reg-num">${i+1}</div>
-      <div class="est-reg-info">
-        <div class="est-reg-nombre">${e.nombreCompleto}</div>
+  lista.innerHTML=listaEstudiantes.map((e,i)=>{
+    const nomDup=nombres.filter(n=>n===e.nombreCompleto.toLowerCase()).length>1;
+    const cedDup=e.cedula&&cedulas.filter(c=>c===e.cedula).length>1;
+    const esDup=nomDup||cedDup;
+    return `<div class="est-reg-item" style="${esDup?'border-left:3px solid #C62828;background:#FFF5F5':''}">
+      <div class="est-reg-num" style="${esDup?'background:#C62828':'background:#2E7D32'}">${i+1}</div>
+      <div class="est-reg-info" style="flex:1">
+        <div class="est-reg-nombre">${e.nombreCompleto}${esDup?' <span style="color:#C62828;font-size:.7rem">⚠ DUPLICADO</span>':''}</div>
         <div class="est-reg-det">${e.grado}${e.paralelo?' '+e.paralelo:''} · ${REGION_LABEL[e.region]||e.region} · ${PERFIL_ICON[e.perfil]||'👤'} ${e.cedula?'· CI: '+e.cedula:''}</div>
+        ${window._editandoIdx===i?`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          <input id="edit-nom-${i}" value="${e.nombres}" placeholder="Nombres" style="padding:4px 8px;border:1.5px solid #FF8C00;border-radius:6px;font-size:.82rem;flex:1;min-width:80px">
+          <input id="edit-ape-${i}" value="${e.apellidos}" placeholder="Apellidos" style="padding:4px 8px;border:1.5px solid #FF8C00;border-radius:6px;font-size:.82rem;flex:1;min-width:80px">
+          <input id="edit-ced-${i}" value="${e.cedula||''}" placeholder="Cédula" style="padding:4px 8px;border:1.5px solid #FF8C00;border-radius:6px;font-size:.82rem;width:110px">
+          <button onclick="guardarEdicion(${i})" style="background:#2E7D32;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.82rem;cursor:pointer">✓ Guardar</button>
+          <button onclick="cancelarEdicion()" style="background:#888;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.82rem;cursor:pointer">✕</button>
+        </div>`:''}
       </div>
-      <button class="btn-est-del" onclick="eliminarEstReg(${i})">🗑️</button>
-    </div>`).join('');
+      <div style="display:flex;gap:4px;align-items:center">
+        <button onclick="editarEstReg(${i})" title="Modificar" style="background:#1565C0;color:#fff;border:none;padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.8rem">✏️</button>
+        <button class="btn-est-del" onclick="eliminarEstReg(${i})" title="Eliminar">🗑️</button>
+      </div>
+    </div>`;}).join('');
 }
 
-window.eliminarEstReg=function(i){listaEstudiantes.splice(i,1);renderListaEstReg();};
+window._editandoIdx=-1;
+window.editarEstReg=function(i){window._editandoIdx=i;renderListaEstReg();};
+window.cancelarEdicion=function(){window._editandoIdx=-1;renderListaEstReg();};
+window.guardarEdicion=function(i){
+  const nom=document.getElementById('edit-nom-'+i)?.value.trim();
+  const ape=document.getElementById('edit-ape-'+i)?.value.trim();
+  const ced=document.getElementById('edit-ced-'+i)?.value.trim();
+  if(!nom||!ape){mostrarNotif('⚠️ Nombre y apellido obligatorios');return;}
+  listaEstudiantes[i]={...listaEstudiantes[i],nombres:nom,apellidos:ape,
+    nombreCompleto:ape+' '+nom,cedula:ced};
+  window._editandoIdx=-1;
+  renderListaEstReg();
+  mostrarNotif('✅ Datos actualizados');
+};
+window.eliminarEstReg=function(i){
+  const nom=listaEstudiantes[i]?.nombreCompleto||'estudiante';
+  listaEstudiantes.splice(i,1);
+  renderListaEstReg();
+  mostrarNotif('🗑️ '+nom+' eliminado');
+};
 
 window.guardarListaEstudiantes=async function(){
   if(listaEstudiantes.length===0){mostrarNotif('No hay estudiantes en la lista');return;}
+  // Verificar duplicados visuales antes de guardar
+  const nombres=listaEstudiantes.map(e=>e.nombreCompleto.toLowerCase());
+  const cedulas=listaEstudiantes.map(e=>e.cedula||'').filter(c=>c);
+  const nomDups=nombres.filter((n,i)=>nombres.indexOf(n)!==i);
+  const cedDups=cedulas.filter((c,i)=>cedulas.indexOf(c)!==i);
+  if(nomDups.length>0||cedDups.length>0){
+    mostrarNotif('⚠️ Hay duplicados en la lista — revísalos antes de guardar');return;
+  }
   try{
     const btn=document.querySelector('.btn-guardar-lista');
     if(btn){btn.textContent='⏳ Guardando...';btn.disabled=true;}
+    // Obtener lista actual de Firebase para evitar duplicados globales
+    const qExist=query(collection(db,'estudiantes_registrados'),where('docenteId','==',docenteId));
+    const snapExist=await getDocs(qExist);
+    const existNombres=snapExist.docs.map(d=>(d.data().nombreCompleto||'').toLowerCase());
+    const existCedulas=snapExist.docs.map(d=>d.data().cedula||'').filter(c=>c);
+    let guardados=0, omitidos=0;
     for(const est of listaEstudiantes){
+      const yaExisteNom=existNombres.includes(est.nombreCompleto.toLowerCase());
+      const yaExisteCed=est.cedula&&existCedulas.includes(est.cedula);
+      if(yaExisteNom||yaExisteCed){omitidos++;continue;}
       await addDoc(collection(db,'estudiantes_registrados'),{
         ...est,docenteId,docenteNombre,docenteCurso,docenteInstitucion,
         fechaRegistro:serverTimestamp()
       });
+      guardados++;
     }
-    mostrarNotif('✅ '+listaEstudiantes.length+' estudiantes guardados en Firebase');
-    // Actualizar lista global
+    const msg=omitidos>0
+      ?'✅ '+guardados+' guardados · ⚠️ '+omitidos+' omitidos (ya existían en Firebase)'
+      :'✅ '+guardados+' estudiantes guardados correctamente';
+    mostrarNotif(msg);
     if(!window._estudiantesRegistrados)window._estudiantesRegistrados=[];
-    window._estudiantesRegistrados.push(...listaEstudiantes);
-    listaEstudiantes=[];renderListaEstReg();
-    // Actualizar DUA con nuevos perfiles
+    // Recargar lista completa desde Firebase
+    const snapNuevo=await getDocs(query(collection(db,'estudiantes_registrados'),where('docenteId','==',docenteId)));
+    window._estudiantesRegistrados=snapNuevo.docs.map(d=>({id:d.id,...d.data()}));
+    listaEstudiantes=[...window._estudiantesRegistrados];
+    renderListaEstReg();
     actualizarDUA(todasSesiones);
     document.getElementById('modal-estudiantes').style.display='none';
     if(btn){btn.textContent='✅ Guardar lista de estudiantes';btn.disabled=false;}
-  }catch(e){mostrarNotif('Error: '+e.message);}
+  }catch(e){mostrarNotif('Error: '+e.message);console.log(e);}
 };
 
 // Cargar estudiantes registrados desde Firebase al abrir el panel
@@ -1881,6 +1954,39 @@ async function cargarEstudiantesRegistrados(){
     }
   }catch(e){console.log('Error cargando estudiantes:',e);}
 }
+
+
+// ── Ver todos los estudiantes registrados (panel completo) ──
+window.verTodosEstudiantes=function(){
+  if(!window._estudiantesRegistrados||window._estudiantesRegistrados.length===0){
+    mostrarNotif('No hay estudiantes registrados aún');return;
+  }
+  listaEstudiantes=[...window._estudiantesRegistrados];
+  renderListaEstReg();
+  mostrarNotif('👥 '+listaEstudiantes.length+' estudiantes cargados');
+};
+
+// ── Limpiar duplicados de Firebase ──
+window.limpiarDuplicadosFirebase=async function(){
+  try{
+    const q=query(collection(db,'estudiantes_registrados'),where('docenteId','==',docenteId));
+    const snap=await getDocs(q);
+    const vistos=new Map();
+    const aEliminar=[];
+    snap.docs.forEach(d=>{
+      const key=(d.data().nombreCompleto||'').toLowerCase();
+      const cedKey=d.data().cedula||'';
+      const dupKey=key+(cedKey?'_'+cedKey:'');
+      if(vistos.has(dupKey)){aEliminar.push(d.id);}
+      else{vistos.set(dupKey,d.id);}
+    });
+    if(aEliminar.length===0){mostrarNotif('✅ No hay duplicados en Firebase');return;}
+    const{deleteDoc,doc:docRef}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    for(const id of aEliminar)await deleteDoc(docRef(db,'estudiantes_registrados',id));
+    mostrarNotif('🧹 '+aEliminar.length+' duplicados eliminados de Firebase');
+    await cargarEstudiantesRegistrados();
+  }catch(e){mostrarNotif('Error: '+e.message);}
+};
 
 // ══ REPORTE INDIVIDUAL ══
 window.abrirModalReporteInd=function(){
